@@ -1,4 +1,7 @@
-node_modules
-dist
-.vscode
-.env
+.idea/
+.vscode/
+node_modules/
+build/
+tmp/
+temp/
+ormconfig.json
