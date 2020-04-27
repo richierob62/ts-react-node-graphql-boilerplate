@@ -1,3 +1,5 @@
+# import Error from '../shared/schema.graphql'
+
 input ProfileInput {
   favoriteColor: String!
 }
@@ -9,29 +11,9 @@ type Mutation {
     password: String!
     email: String!
     profile: ProfileInput
-  ): User!
+  ): Error
 }
 
 type Query {
   dummy: String!
-}
-
-type User {
-  id: Int!
-  firstName: String!
-  lastName: String!
-  email: String!
-  password: String!
-  profile: Profile
-  photos: [Photo!]
-}
-
-type Profile {
-  id: Int!
-  favoriteColor: String!
-}
-
-type Photo {
-  id: Int!
-  url: String!
 }

@@ -16,11 +16,13 @@ const startServer = async (port: string) => {
     .filter((name) => name.indexOf('.') === -1);
 
   folders.forEach((folder) => {
-    const { resolvers } = require(`../modules/${folder}/resolvers`);
-    const typeDefs = importSchema(
-      path.join(__dirname, `../modules/${folder}/schema.graphql`)
-    );
-    schemas.push(makeExecutableSchema({ resolvers, typeDefs }));
+    if (folder !== 'shared') {
+      const { resolvers } = require(`../modules/${folder}/resolvers`);
+      const typeDefs = importSchema(
+        path.join(__dirname, `../modules/${folder}/schema.graphql`)
+      );
+      schemas.push(makeExecutableSchema({ resolvers, typeDefs }));
+    }
   });
 
   const app = express();

@@ -11,6 +11,14 @@ export const resolvers: ResolverMap = {
       try {
         const userData = { ...args } as User;
         delete userData.profile;
+        const userWithEmail = await User.findOne({
+          where: { email: userData.email },
+          select: ['id'],
+        });
+
+        if (userWithEmail) {
+          throw new Error('email already registered');
+        }
 
         let profile;
         if (args.profile) {
@@ -20,10 +28,13 @@ export const resolvers: ResolverMap = {
           userData.profileId = profile.id;
         }
         const user = User.create(userData);
-        const result = await User.save(user);
-        return result;
+        await User.save(user);
+        return null;
       } catch (e) {
-        throw new Error(e.message);
+        return {
+          path: 'email',
+          message: 'email already registered',
+        };
       }
     },
   },

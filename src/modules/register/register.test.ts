@@ -15,26 +15,19 @@ afterEach(async () => {
 });
 
 test('Can register user', async () => {
-  const log = console.log;
-  console.log = () => {};
-
   const email = `first@example.com`;
 
   const mutation = `mutation {
     register(firstName: "first name", lastName: "last name", password: "123", email: "${email}", profile: {
       favoriteColor: "green"
     }) {
-      firstName
-      lastName
-      email
+      path
+      message
     }
   }`;
+
   const expected = {
-    register: {
-      email,
-      firstName: 'first name',
-      lastName: 'last name',
-    },
+    register: null,
   };
 
   const response = await request(graphql_endpoint, mutation);
@@ -46,5 +39,11 @@ test('Can register user', async () => {
   expect(users[0].email).toEqual(email);
   expect(users[0].password).not.toEqual('123');
 
-  console.log = log;
+  const responseDuplicate = await request(graphql_endpoint, mutation);
+
+  const expected2 = {
+    register: { path: 'email', message: 'email already registered' },
+  };
+
+  expect(responseDuplicate).toEqual(expected2);
 });
