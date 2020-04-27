@@ -19,13 +19,13 @@ export class User extends BaseEntity {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ type: 'varchar', length: '50' })
+  @Column({ type: 'varchar', length: '100' })
   firstName: string;
 
-  @Column({ type: 'varchar', length: '50' })
+  @Column({ type: 'varchar', length: '100' })
   lastName: string;
 
-  @Column({ type: 'varchar', length: '50', unique: true })
+  @Column({ type: 'varchar', length: '100', unique: true })
   email: string;
 
   @Column('text')

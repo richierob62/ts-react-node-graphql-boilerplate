@@ -11,7 +11,7 @@ type Mutation {
     password: String!
     email: String!
     profile: ProfileInput
-  ): Error
+  ): [Error!]
 }
 
 type Query {

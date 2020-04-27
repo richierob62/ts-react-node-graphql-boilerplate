@@ -1,6 +1,14 @@
+import * as yup from 'yup';
+
 import { Profile } from '../../entity/Profile';
 import { ResolverMap } from '../../utils/resolver_types';
 import { User } from '../../entity/User';
+import { formatYupError } from '../../utils/format_yup_error';
+
+const schema = yup.object().shape({
+  email: yup.string().min(3).max(100).email(),
+  password: yup.string().min(3).max(100),
+});
 
 export const resolvers: ResolverMap = {
   Query: {
@@ -9,6 +17,13 @@ export const resolvers: ResolverMap = {
   Mutation: {
     register: async (_, args) => {
       try {
+        try {
+          await schema.validate(args, { abortEarly: false });
+        } catch (e) {
+          return formatYupError(e);
+        }
+
+        // const { email, passord } = args;
         const userData = { ...args } as User;
         delete userData.profile;
         const userWithEmail = await User.findOne({
@@ -31,10 +46,12 @@ export const resolvers: ResolverMap = {
         await User.save(user);
         return null;
       } catch (e) {
-        return {
-          path: 'email',
-          message: 'email already registered',
-        };
+        return [
+          {
+            path: 'email',
+            message: 'email already registered',
+          },
+        ];
       }
     },
   },
