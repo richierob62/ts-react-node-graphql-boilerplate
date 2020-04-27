@@ -23,10 +23,6 @@ type Query {
   users: [User!]!
 }
 
-input ProfileInput {
-  favoriteColor: String!
-}
-
 type Mutation {
   updateUser(
     id: Int!
@@ -37,12 +33,4 @@ type Mutation {
   ): Boolean
 
   deleteUser(id: Int!): Boolean
-
-  register(
-    firstName: String!
-    lastName: String!
-    password: String!
-    email: String!
-    profile: ProfileInput
-  ): User!
 }

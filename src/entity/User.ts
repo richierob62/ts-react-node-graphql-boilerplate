@@ -1,3 +1,5 @@
+import * as bcrypt from 'bcrypt';
+
 import {
   BaseEntity,
   BeforeInsert,
@@ -26,8 +28,8 @@ export class User extends BaseEntity {
   @Column({ type: 'varchar', length: '50', unique: true })
   email: string;
 
-  @Column('int')
-  age: number;
+  @Column('text')
+  password: string;
 
   @Column({ type: 'boolean', default: false })
   confirmed: boolean;
@@ -43,7 +45,7 @@ export class User extends BaseEntity {
   photos: Photo[];
 
   @BeforeInsert()
-  doubleAge() {
-    this.age = this.age * 2;
+  async hashPassword() {
+    this.password = await bcrypt.hash(this.password, 12);
   }
 }

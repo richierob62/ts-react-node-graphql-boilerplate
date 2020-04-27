@@ -1,0 +1,37 @@
+input ProfileInput {
+  favoriteColor: String!
+}
+
+type Mutation {
+  register(
+    firstName: String!
+    lastName: String!
+    password: String!
+    email: String!
+    profile: ProfileInput
+  ): User!
+}
+
+type Query {
+  dummy: String!
+}
+
+type User {
+  id: Int!
+  firstName: String!
+  lastName: String!
+  email: String!
+  password: String!
+  profile: Profile
+  photos: [Photo!]
+}
+
+type Profile {
+  id: Int!
+  favoriteColor: String!
+}
+
+type Photo {
+  id: Int!
+  url: String!
+}
