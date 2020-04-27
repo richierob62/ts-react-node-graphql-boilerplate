@@ -1,8 +1,8 @@
-import { Profile } from '../entity/Profile';
-import { ResolverMap } from '../modules/resolver_types';
-import { User } from '../entity/User';
+import { Profile } from '../../entity/Profile';
+import { ResolverMap } from '../../utils/resolver_types';
+import { User } from '../../entity/User';
 
-const resolvers: ResolverMap = {
+export const resolvers: ResolverMap = {
   Query: {
     user: async (_, { id }) => {
       const user = await User.findOne({
@@ -52,29 +52,8 @@ const resolvers: ResolverMap = {
         throw new Error(e.message);
       }
     },
-    register: async (_, args) => {
-      try {
-        const userData = { ...args } as User;
-        delete userData.profile;
-
-        let profile;
-        if (args.profile) {
-          const profileData = args.profile as Profile;
-          profile = Profile.create(profileData);
-          await Profile.save(profile);
-          userData.profileId = profile.id;
-        }
-        const user = User.create(userData);
-        const result = await User.save(user);
-        return result;
-      } catch (e) {
-        throw new Error(e.message);
-      }
-    },
   },
 };
-
-export default resolvers;
 
 // QueryBuilder
 // https://typeorm.io/#/select-query-builder
