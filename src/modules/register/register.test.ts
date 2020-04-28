@@ -10,6 +10,7 @@ const graphql_endpoint = 'http://localhost:3001/graphql';
 const domain = 'http://localhost:3001';
 
 let conn: Connection;
+const redis = new Redis();
 
 const mutation = (email: string, password: string) => `mutation {
   register(firstName: "first name", lastName: "last name", password: "${password}", email: "${email}", profile: {
@@ -101,8 +102,6 @@ describe('register', () => {
     const email = `first@example.com`;
     const pw = 'password';
 
-    const redis = new Redis();
-
     const mutate = mutation(email, pw);
 
     await request(graphql_endpoint, mutate);
@@ -125,5 +124,24 @@ describe('register', () => {
     const val = await redis.get(redisKey);
 
     expect(val).toBeNull();
+  });
+
+  it('returns invalid for invalid confirmation key', async () => {
+    const email = `first@example.com`;
+    const pw = 'password';
+
+    const mutate = mutation(email, pw);
+
+    await request(graphql_endpoint, mutate);
+
+    const users = await User.find({ email });
+    const { id } = users[0];
+
+    const url = (await createConfirmEmailLink(domain, id, redis)) + 'abc';
+
+    const response = await fetch(url);
+    const text = await response.text();
+
+    expect(text).toBe('invalid');
   });
 });

@@ -37,7 +37,7 @@ const startServer = async (port: string) => {
   app.get('/confirm/:id', async (req, res) => {
     const { id } = req.params;
     const userId = await redis.get(id);
-    if (!userId) return null;
+    if (!userId) return res.send('invalid');
     await User.update({ id: parseInt(userId) }, { confirmed: true });
     await redis.del(id);
     return res.send('ok'); // or redirect
