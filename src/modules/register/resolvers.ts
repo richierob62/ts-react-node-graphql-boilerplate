@@ -3,6 +3,7 @@ import * as yup from 'yup';
 import { Profile } from '../../entity/Profile';
 import { ResolverMap } from '../../utils/resolver_types';
 import { User } from '../../entity/User';
+import { createConfirmEmailLink } from '../../utils/create_confirm_email_link';
 import { formatYupError } from '../../utils/format_yup_error';
 
 const schema = yup.object().shape({
@@ -15,7 +16,7 @@ export const resolvers: ResolverMap = {
     dummy: () => 'ignore',
   },
   Mutation: {
-    register: async (_, args) => {
+    register: async (_, args, { redis, confirmUrl }) => {
       try {
         try {
           await schema.validate(args, { abortEarly: false });
@@ -43,7 +44,10 @@ export const resolvers: ResolverMap = {
           userData.profileId = profile.id;
         }
         const user = User.create(userData);
-        await User.save(user);
+        await user.save();
+
+        await createConfirmEmailLink(confirmUrl, user.id, redis);
+
         return null;
       } catch (e) {
         return [

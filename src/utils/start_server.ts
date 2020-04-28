@@ -1,3 +1,4 @@
+import * as Redis from 'ioredis';
 import * as express from 'express';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -6,6 +7,7 @@ import { makeExecutableSchema, mergeSchemas } from 'graphql-tools';
 
 import { ApolloServer } from 'apollo-server-express';
 import { GraphQLSchema } from 'graphql';
+import { User } from '../entity/User';
 import createTypeormConnection from './create_typeorm_connection';
 import { importSchema } from 'graphql-import';
 
@@ -30,9 +32,24 @@ const startServer = async (port: string) => {
   app.use(express.urlencoded({ extended: true }));
   app.use(express.json());
 
+  const redis = new Redis();
+
+  app.get('/confirm/:id', async (req, res) => {
+    const { id } = req.params;
+    const userId = await redis.get(id);
+    if (!userId) return null;
+    await User.update({ id: parseInt(userId) }, { confirmed: true });
+    return res.send('ok'); // or redirect
+  });
+
   const server = new ApolloServer({
     schema: mergeSchemas({ schemas }),
-    context: ({ req, res }) => ({ req, res }),
+    context: ({ req, res }) => ({
+      req,
+      res,
+      redis,
+      confirmUrl: req.protocol + '://' + req.get('host'),
+    }),
   });
 
   server.applyMiddleware({ app });

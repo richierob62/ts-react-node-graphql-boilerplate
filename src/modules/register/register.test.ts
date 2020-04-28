@@ -24,7 +24,7 @@ afterEach(async () => {
 });
 
 describe('Register', () => {
-  test('Can register user', async () => {
+  it('Can register user', async () => {
     const email = `first@example.com`;
     const pw = 'password';
 
@@ -44,7 +44,7 @@ describe('Register', () => {
     expect(users[0].password).not.toEqual(pw);
   });
 
-  test('Returns error for duplicate email', async () => {
+  it('Returns error for duplicate email', async () => {
     const email = `first@example.com`;
     const pw = 'password';
 
@@ -61,7 +61,7 @@ describe('Register', () => {
     expect(JSON.stringify(response)).toEqual(expected);
   });
 
-  test('Checks valid email and password', async () => {
+  it('Checks valid email and password', async () => {
     const email = `aa`;
     const pw = 'aa';
 
