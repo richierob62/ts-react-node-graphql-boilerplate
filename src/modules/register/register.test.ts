@@ -101,6 +101,8 @@ describe('register', () => {
     const email = `first@example.com`;
     const pw = 'password';
 
+    const redis = new Redis();
+
     const mutate = mutation(email, pw);
 
     await request(graphql_endpoint, mutate);
@@ -108,11 +110,20 @@ describe('register', () => {
     const users = await User.find({ email });
     const { id } = users[0];
 
-    const url = await createConfirmEmailLink(domain, id, new Redis());
+    const url = await createConfirmEmailLink(domain, id, redis);
 
     const response = await fetch(url);
     const text = await response.text();
 
     expect(text).toBe('ok');
+
+    const user = await User.findOne({ id });
+    expect(user && user.confirmed).toBeTruthy();
+
+    const chunks = url.split('/');
+    const redisKey = chunks[chunks.length - 1];
+    const val = await redis.get(redisKey);
+
+    expect(val).toBeNull();
   });
 });
