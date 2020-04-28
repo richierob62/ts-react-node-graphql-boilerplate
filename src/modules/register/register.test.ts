@@ -1,9 +1,14 @@
 import { Connection } from 'typeorm';
 import { User } from '../../entity/User';
+import { createConfirmEmailLink } from '../../utils/create_confirm_email_link';
 import createTypeormConnection from '../../utils/create_typeorm_connection';
+import fetch from 'node-fetch';
 import { request } from 'graphql-request';
+import Redis = require('ioredis');
 
 const graphql_endpoint = 'http://localhost:3001/graphql';
+const domain = 'http://localhost:3001';
+
 let conn: Connection;
 
 const mutation = (email: string, password: string) => `mutation {
@@ -23,8 +28,8 @@ afterEach(async () => {
   await conn.close();
 });
 
-describe('Register', () => {
-  it('Can register user', async () => {
+describe('register', () => {
+  it('can register user', async () => {
     const email = `first@example.com`;
     const pw = 'password';
 
@@ -44,7 +49,7 @@ describe('Register', () => {
     expect(users[0].password).not.toEqual(pw);
   });
 
-  it('Returns error for duplicate email', async () => {
+  it('returns error for duplicate email', async () => {
     const email = `first@example.com`;
     const pw = 'password';
 
@@ -61,7 +66,7 @@ describe('Register', () => {
     expect(JSON.stringify(response)).toEqual(expected);
   });
 
-  it('Checks valid email and password', async () => {
+  it('checks valid email and password', async () => {
     const email = `aa`;
     const pw = 'aa';
 
@@ -90,5 +95,24 @@ describe('Register', () => {
         message: 'password must be at least 3 characters',
       })
     );
+  });
+
+  it('sends confirmation email', async () => {
+    const email = `first@example.com`;
+    const pw = 'password';
+
+    const mutate = mutation(email, pw);
+
+    await request(graphql_endpoint, mutate);
+
+    const users = await User.find({ email });
+    const { id } = users[0];
+
+    const url = await createConfirmEmailLink(domain, id, new Redis());
+
+    const response = await fetch(url);
+    const text = await response.text();
+
+    expect(text).toBe('ok');
   });
 });
