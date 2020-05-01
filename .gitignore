@@ -3,3 +3,5 @@
 node_modules/
 build/
 ormconfig.json
+dump.rdb
+.env

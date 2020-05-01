@@ -1,50 +1,38 @@
-import * as Redis from 'ioredis';
 import * as express from 'express';
-import * as fs from 'fs';
-import * as path from 'path';
-
-import { makeExecutableSchema, mergeSchemas } from 'graphql-tools';
 
 import { ApolloServer } from 'apollo-server-express';
-import { GraphQLSchema } from 'graphql';
-import { User } from '../entity/User';
+import { confirmEmail } from '../routes/confirmEmail';
 import createTypeormConnection from './create_typeorm_connection';
-import { importSchema } from 'graphql-import';
+import generateSchema from './generate_schema';
+import redis from './redis';
+
+import session = require('express-session');
 
 const startServer = async (port: string) => {
-  const schemas: GraphQLSchema[] = [];
-  const folders = fs
-    .readdirSync(path.join(__dirname, '../modules'))
-    .filter((name) => name.indexOf('.') === -1);
-
-  folders.forEach((folder) => {
-    if (folder !== 'shared') {
-      const { resolvers } = require(`../modules/${folder}/resolvers`);
-      const typeDefs = importSchema(
-        path.join(__dirname, `../modules/${folder}/schema.graphql`)
-      );
-      schemas.push(makeExecutableSchema({ resolvers, typeDefs }));
-    }
-  });
-
+  const schema = generateSchema();
   const app = express();
 
   app.use(express.urlencoded({ extended: true }));
   app.use(express.json());
 
-  const redis = new Redis();
+  app.use(
+    session({
+      name: 'qid',
+      secret: process.env.SESSION_SECRET || 'session_secret',
+      resave: false,
+      saveUninitialized: false,
+      cookie: {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        maxAge: 1000 * 60 * 60 * 24 * 7,
+      },
+    })
+  );
 
-  app.get('/confirm/:id', async (req, res) => {
-    const { id } = req.params;
-    const userId = await redis.get(id);
-    if (!userId) return res.send('invalid');
-    await User.update({ id: parseInt(userId) }, { confirmed: true });
-    await redis.del(id);
-    return res.send('ok'); // or redirect
-  });
+  app.get('/confirm/:id', confirmEmail);
 
   const server = new ApolloServer({
-    schema: mergeSchemas({ schemas }),
+    schema,
     context: ({ req, res }) => ({
       req,
       res,

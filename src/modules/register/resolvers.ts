@@ -33,7 +33,7 @@ export const resolvers: ResolverMap = {
         });
 
         if (userWithEmail) {
-          throw new Error('email already registered');
+          throw new Error();
         }
 
         let profile;

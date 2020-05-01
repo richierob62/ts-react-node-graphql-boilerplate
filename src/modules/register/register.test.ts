@@ -67,7 +67,7 @@ describe('register', () => {
     expect(JSON.stringify(response)).toEqual(expected);
   });
 
-  it('checks valid email and password', async () => {
+  it('checks for valid email and password', async () => {
     const email = `aa`;
     const pw = 'aa';
 
