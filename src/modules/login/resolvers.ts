@@ -8,7 +8,7 @@ export const resolvers: ResolverMap = {
     dummy2: () => 'ignore',
   },
   Mutation: {
-    login: async (_, { email, password }) => {
+    login: async (_, { email, password }, { req }) => {
       try {
         const user = await User.findOne({ where: { email } });
 
@@ -25,6 +25,8 @@ export const resolvers: ResolverMap = {
         const validPassword = await bcrypt.compare(password, user.password);
 
         if (!validPassword) throw new Error();
+
+        (req.session as any).userId = user.id;
 
         return null;
       } catch (e) {

@@ -11,7 +11,6 @@ export const resolvers: ResolverMap = {
         },
         relations: ['profile', 'photos'],
       });
-      console.log(user);
       return user;
     },
     users: async () => await User.find({ relations: ['profile'] }),

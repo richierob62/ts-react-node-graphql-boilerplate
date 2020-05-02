@@ -1,12 +1,16 @@
+import * as connectRedis from 'connect-redis';
+import * as cors from 'cors';
 import * as express from 'express';
 
 import { ApolloServer } from 'apollo-server-express';
 import { confirmEmail } from '../routes/confirmEmail';
 import createTypeormConnection from './create_typeorm_connection';
 import generateSchema from './generate_schema';
-import redis from './redis';
+import redis from '../utils/redis';
 
 import session = require('express-session');
+
+const RedisStore = connectRedis(session);
 
 const startServer = async (port: string) => {
   const schema = generateSchema();
@@ -17,8 +21,9 @@ const startServer = async (port: string) => {
 
   app.use(
     session({
-      name: 'qid',
+      name: 'rid',
       secret: process.env.SESSION_SECRET || 'session_secret',
+      store: new RedisStore({ client: redis }),
       resave: false,
       saveUninitialized: false,
       cookie: {
@@ -28,6 +33,15 @@ const startServer = async (port: string) => {
       },
     })
   );
+
+  const corsOptions = {
+    credentials: true,
+    origin: process.env.TESTING ? '*' : process.env.FRONT_END_DOMAIN,
+  };
+
+  app.set('trust proxy', true);
+
+  app.use(cors(corsOptions));
 
   app.get('/confirm/:id', confirmEmail);
 
