@@ -15,7 +15,32 @@ afterAll(async () => {
 });
 
 describe('logout', () => {
-  it('logs out current user', async () => {
+  it('logs user out of multiple sessions', async () => {
+    const client1 = new TestClient(graphql_endpoint);
+    const client2 = new TestClient(graphql_endpoint);
+
+    const email = `first@example.com`;
+    const password = 'password';
+
+    await client1.register(email, password, 'first', 'last');
+    await client1.confirmUserByEmail(email);
+
+    await client1.login(email, password);
+    await client2.login(email, password);
+
+    let firstSession = await client1.currentUser();
+    let secondSession = await client2.currentUser();
+
+    expect(firstSession).toEqual(secondSession);
+
+    await client1.logout();
+    firstSession = await client1.currentUser();
+    secondSession = await client2.currentUser();
+
+    expect(firstSession).toEqual(secondSession);
+  });
+
+  it('logs out current user from single session', async () => {
     const client = new TestClient(graphql_endpoint);
 
     const email = `first@example.com`;

@@ -23,7 +23,7 @@ const startServer = async (port: string) => {
     session({
       name: 'rid',
       secret: process.env.SESSION_SECRET || 'session_secret',
-      store: new RedisStore({ client: redis }),
+      store: new RedisStore({ client: redis, prefix: 'sess:' }),
       resave: false,
       saveUninitialized: false,
       cookie: {

@@ -57,9 +57,7 @@ export class TestClient {
   }
 
   async confirmUserByEmail(email: string) {
-    const user = (await User.findOne({ email })) as User;
-    user.confirmed = true;
-    await user.save();
+    await User.update({ email }, { confirmed: true });
   }
 
   async register(

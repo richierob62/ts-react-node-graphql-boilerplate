@@ -8,7 +8,7 @@ export const resolvers: ResolverMap = {
     dummy2: () => 'ignore',
   },
   Mutation: {
-    login: async (_, { email, password }, { req }) => {
+    login: async (_, { email, password }, { req, redis }) => {
       try {
         const user = await User.findOne({ where: { email } });
 
@@ -27,6 +27,9 @@ export const resolvers: ResolverMap = {
         if (!validPassword) throw new Error();
 
         (req.session as any).userId = user.id;
+        if (req.sessionID) {
+          await redis.lpush(`user_sid:${user.id}`, req.sessionID);
+        }
 
         return null;
       } catch (e) {
