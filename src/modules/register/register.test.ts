@@ -1,9 +1,9 @@
 import { Connection } from 'typeorm';
+import { TestClient } from '../../utils/TestClient';
 import { User } from '../../entity/User';
 import { createConfirmEmailLink } from '../../utils/create_confirm_email_link';
 import createTypeormConnection from '../../utils/create_typeorm_connection';
 import fetch from 'node-fetch';
-import { request } from 'graphql-request';
 import Redis = require('ioredis');
 
 const graphql_endpoint = 'http://localhost:3001/graphql';
@@ -11,15 +11,6 @@ const domain = 'http://localhost:3001';
 
 let conn: Connection;
 const redis = new Redis();
-
-const mutation = (email: string, password: string) => `mutation {
-  register(firstName: "first name", lastName: "last name", password: "${password}", email: "${email}", profile: {
-    favoriteColor: "green"
-  }) {
-    path
-    message
-  }
-}`;
 
 beforeEach(async () => {
   conn = await createTypeormConnection();
@@ -31,53 +22,50 @@ afterEach(async () => {
 
 describe('register', () => {
   it('can register user', async () => {
-    const email = `first@example.com`;
-    const pw = 'password';
+    const client = new TestClient(graphql_endpoint);
 
-    const mutate = mutation(email, pw);
+    const email = `first@example.com`;
+    const password = 'password';
+
+    const result = await client.register(email, password, 'first', 'last');
 
     const expected = {
       register: null,
     };
 
-    const response = await request(graphql_endpoint, mutate);
-
-    expect(response).toEqual(expected);
+    expect(result.data).toEqual(expected);
 
     const users = await User.find({ email });
     expect(users).toHaveLength(1);
     expect(users[0].email).toEqual(email);
-    expect(users[0].password).not.toEqual(pw);
+    expect(users[0].password).not.toEqual(password);
   });
 
   it('returns error for duplicate email', async () => {
+    const client = new TestClient(graphql_endpoint);
+
     const email = `first@example.com`;
-    const pw = 'password';
+    const password = 'password';
 
-    const mutate = mutation(email, pw);
+    await client.register(email, password, 'first', 'last');
 
-    await request(graphql_endpoint, mutate);
-
-    const response = await request(graphql_endpoint, mutate);
+    const result = await client.register(email, password, 'first', 'last');
 
     const expected = JSON.stringify({
       register: [{ path: 'email', message: 'email already registered' }],
     });
 
-    expect(JSON.stringify(response)).toEqual(expected);
+    expect(JSON.stringify(result.data)).toEqual(expected);
   });
 
   it('checks for valid email and password', async () => {
-    const email = `aa`;
-    const pw = 'aa';
+    const client = new TestClient(graphql_endpoint);
 
-    const mutate = mutation(email, pw);
+    const result = await client.register('aa', 'pp', 'first', 'last');
 
-    const { register } = await request(graphql_endpoint, mutate);
+    expect(result.data.register.length).toBe(3);
 
-    expect(register.length).toBe(3);
-
-    const stringifyResponse = JSON.stringify(register);
+    const stringifyResponse = JSON.stringify(result);
 
     expect(stringifyResponse).toContain(
       JSON.stringify({
@@ -99,12 +87,12 @@ describe('register', () => {
   });
 
   it('sends confirmation email', async () => {
+    const client = new TestClient(graphql_endpoint);
+
     const email = `first@example.com`;
-    const pw = 'password';
+    const password = 'password';
 
-    const mutate = mutation(email, pw);
-
-    await request(graphql_endpoint, mutate);
+    await client.register(email, password, 'first', 'last');
 
     const users = await User.find({ email });
     const { id } = users[0];
@@ -127,17 +115,17 @@ describe('register', () => {
   });
 
   it('returns invalid for invalid confirmation key', async () => {
+    const client = new TestClient(graphql_endpoint);
+
     const email = `first@example.com`;
-    const pw = 'password';
+    const password = 'password';
 
-    const mutate = mutation(email, pw);
-
-    await request(graphql_endpoint, mutate);
+    await client.register(email, password, 'first', 'last');
 
     const users = await User.find({ email });
     const { id } = users[0];
 
-    const url = (await createConfirmEmailLink(domain, id, redis)) + 'abc';
+    const url = (await createConfirmEmailLink(domain, id, redis)) + 'junk';
 
     const response = await fetch(url);
     const text = await response.text();

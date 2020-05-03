@@ -14,16 +14,8 @@ afterAll(async () => {
   await conn.close();
 });
 
-describe('current user', () => {
-  it('returns null if no cookie', async () => {
-    const client = new TestClient(graphql_endpoint);
-
-    const result = await client.currentUser();
-
-    expect(result.data.currentUser).toEqual(null);
-  });
-
-  it('returns current user', async () => {
+describe('logout', () => {
+  it('logs out current user', async () => {
     const client = new TestClient(graphql_endpoint);
 
     const email = `first@example.com`;
@@ -32,11 +24,14 @@ describe('current user', () => {
     await client.register(email, password, 'first', 'last');
     await client.confirmUserByEmail(email);
 
-    await client.login(email, password);
-    const result = await client.currentUser();
+    const result = await client.login(email, password);
 
-    const expected = { email, id: 1 };
+    expect(result.data).toEqual({ login: null });
 
-    expect(result.data.currentUser).toEqual(expected);
+    const result2 = await client.logout();
+    expect(result2.data.logout).toEqual(true);
+
+    const result3 = await client.currentUser();
+    expect(result3.data.currentUser).toBeNull();
   });
 });

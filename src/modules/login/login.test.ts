@@ -1,27 +1,10 @@
 import { Connection } from 'typeorm';
-import { User } from '../../entity/User';
+import { TestClient } from '../../utils/TestClient';
 import createTypeormConnection from '../../utils/create_typeorm_connection';
-import { request } from 'graphql-request';
 
 const graphql_endpoint = 'http://localhost:3001/graphql';
 
 let conn: Connection;
-
-const registerMutation = (email: string, password: string) => `mutation {
-  register(firstName: "first name", lastName: "last name", password: "${password}", email: "${email}", profile: {
-    favoriteColor: "green"
-  }) {
-    path
-    message
-  }
-}`;
-
-const loginMutation = (email: string, password: string) => `mutation {
-  login(password: "${password}", email: "${email}") {
-    path
-    message
-  }
-}`;
 
 beforeEach(async () => {
   conn = await createTypeormConnection();
@@ -33,41 +16,29 @@ afterEach(async () => {
 
 describe('login', () => {
   it('can login user', async () => {
+    const client = new TestClient(graphql_endpoint);
+
     const email = `first@example.com`;
-    const pw = 'password';
+    const password = 'password';
 
-    const register = registerMutation(email, pw);
+    await client.register(email, password, 'first', 'last');
+    await client.confirmUserByEmail(email);
 
-    await request(graphql_endpoint, register);
+    const result = await client.login(email, password);
 
-    // mark as confirmed
-    const user = (await User.findOne({ email })) as User;
-    user.confirmed = true;
-    await user.save();
-
-    const login = loginMutation(email, pw);
-
-    const result = await request(graphql_endpoint, login);
-
-    expect(result).toEqual({ login: null });
+    expect(result.data).toEqual({ login: null });
   });
 
   it('can returns error for bad creds', async () => {
+    const client = new TestClient(graphql_endpoint);
+
     const email = `first@example.com`;
-    const pw = 'password';
+    const password = 'password';
 
-    const register = registerMutation(email, pw);
+    await client.register(email, password, 'first', 'last');
+    await client.confirmUserByEmail(email);
 
-    await request(graphql_endpoint, register);
-
-    // mark as confirmed
-    const user = (await User.findOne({ email })) as User;
-    user.confirmed = true;
-    await user.save();
-
-    let login = loginMutation('bademail@email.com', pw);
-
-    let result = await request(graphql_endpoint, login);
+    const result = await client.login(email, 'bad_password');
 
     let expected = {
       login: [
@@ -78,11 +49,9 @@ describe('login', () => {
       ],
     };
 
-    expect(result).toEqual(expected);
+    expect(result.data).toEqual(expected);
 
-    login = loginMutation(email, 'bad_password');
-
-    result = await request(graphql_endpoint, login);
+    const result2 = await client.login('bad_email@bad.com', password);
 
     expected = {
       login: [
@@ -93,20 +62,18 @@ describe('login', () => {
       ],
     };
 
-    expect(result).toEqual(expected);
+    expect(result2.data).toEqual(expected);
   });
 
   it('handles unconfirmed email', async () => {
+    const client = new TestClient(graphql_endpoint);
+
     const email = `first@example.com`;
-    const pw = 'password';
+    const password = 'password';
 
-    const register = registerMutation(email, pw);
+    await client.register(email, password, 'first', 'last');
 
-    await request(graphql_endpoint, register);
-
-    const login = loginMutation(email, pw);
-
-    const result = await request(graphql_endpoint, login);
+    const result = await client.login(email, password);
 
     const expected = {
       login: [
@@ -117,6 +84,6 @@ describe('login', () => {
       ],
     };
 
-    expect(result).toEqual(expected);
+    expect(result.data).toEqual(expected);
   });
 });
