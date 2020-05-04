@@ -1,15 +1,9 @@
-import * as yup from 'yup';
-
 import { Profile } from '../../entity/Profile';
 import { ResolverMap } from '../../utils/resolver_types';
 import { User } from '../../entity/User';
 import { createConfirmEmailLink } from '../../utils/create_confirm_email_link';
+import { emailAndPasswordValidation } from '../../utils/yup_schemas';
 import { formatYupError } from '../../utils/format_yup_error';
-
-const schema = yup.object().shape({
-  email: yup.string().min(3).max(100).email(),
-  password: yup.string().min(3).max(100),
-});
 
 export const resolvers: ResolverMap = {
   Query: {
@@ -19,7 +13,9 @@ export const resolvers: ResolverMap = {
     register: async (_, args, { redis, confirmUrl }) => {
       try {
         try {
-          await schema.validate(args, { abortEarly: false });
+          await emailAndPasswordValidation.validate(args, {
+            abortEarly: false,
+          });
         } catch (e) {
           return formatYupError(e);
         }

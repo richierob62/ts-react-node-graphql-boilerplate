@@ -3,6 +3,7 @@ import * as bcrypt from 'bcrypt';
 import {
   BaseEntity,
   BeforeInsert,
+  BeforeUpdate,
   Column,
   Entity,
   JoinColumn,
@@ -34,6 +35,9 @@ export class User extends BaseEntity {
   @Column({ type: 'boolean', default: false })
   confirmed: boolean;
 
+  @Column({ type: 'boolean', default: false })
+  account_locked: boolean;
+
   @Column({ nullable: true })
   profileId: number;
 
@@ -44,8 +48,13 @@ export class User extends BaseEntity {
   @OneToMany(() => Photo, (photo) => photo.user)
   photos: Photo[];
 
+  @BeforeUpdate()
+  async hashPasswordBeforeUpdate() {
+    this.password = await bcrypt.hash(this.password, 12);
+  }
+
   @BeforeInsert()
-  async hashPassword() {
+  async hashPasswordBeforeInsert() {
     this.password = await bcrypt.hash(this.password, 12);
   }
 }

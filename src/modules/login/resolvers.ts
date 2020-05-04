@@ -22,6 +22,14 @@ export const resolvers: ResolverMap = {
             },
           ];
 
+        if (user.account_locked)
+          return [
+            {
+              path: 'email',
+              message: 'Your account has been locked',
+            },
+          ];
+
         const validPassword = await bcrypt.compare(password, user.password);
 
         if (!validPassword) throw new Error();

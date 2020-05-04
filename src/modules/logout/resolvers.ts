@@ -1,4 +1,5 @@
 import { ResolverMap } from '../../utils/resolver_types';
+import { removeUserSessions } from '../../utils/remove_users_sessions';
 
 export const resolvers: ResolverMap = {
   Query: {
@@ -11,16 +12,7 @@ export const resolvers: ResolverMap = {
       const { userId } = req.session;
 
       if (userId) {
-        const sessionIds = await redis.lrange(`user_sid:${userId}`, 0, -1);
-
-        const promises = [];
-
-        for (let i = 0; i < sessionIds.length; i++) {
-          promises.push(redis.del(`sess:${sessionIds[i]}`));
-        }
-
-        await Promise.all(promises);
-
+        removeUserSessions(parseInt(userId), redis);
         return true;
       }
 

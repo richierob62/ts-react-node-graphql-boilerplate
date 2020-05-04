@@ -56,6 +56,20 @@ export class TestClient {
     });
   }
 
+  async resetPassword(newPassword: string, key: string) {
+    return rp.post(this.url, {
+      ...this.options,
+      body: {
+        query: `mutation {
+          resetPassword(newPassword: "${newPassword}", key: "${key}") {
+            path
+            message
+          }
+        }`,
+      },
+    });
+  }
+
   async confirmUserByEmail(email: string) {
     await User.update({ email }, { confirmed: true });
   }
