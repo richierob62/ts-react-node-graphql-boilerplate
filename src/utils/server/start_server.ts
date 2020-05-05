@@ -6,10 +6,10 @@ import * as rateLimit from 'express-rate-limit';
 import * as session from 'express-session';
 
 import { ApolloServer } from 'apollo-server-express';
-import { confirmEmail } from '../routes/confirmEmail';
+import { confirmEmail } from '../../routes/confirmEmail';
 import createTypeormConnection from './create_typeorm_connection';
 import generateSchema from './generate_schema';
-import redis from '../utils/redis';
+import redis from '../redis/redis';
 
 const startServer = async (port: string) => {
   const schema = generateSchema();

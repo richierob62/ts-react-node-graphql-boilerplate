@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 
 import { User } from '../entity/User';
-import redis from '../utils/redis';
+import redis from '../utils/redis/redis';
 
 export const confirmEmail = async (req: Request, res: Response) => {
   const { id } = req.params;

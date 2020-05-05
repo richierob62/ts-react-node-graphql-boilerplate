@@ -1,9 +1,9 @@
 import { Connection } from 'typeorm';
-import { TestClient } from '../../utils/TestClient';
+import { TestClient } from '../../utils/tests/TestClient';
 import { User } from '../../entity/User';
-import { createForgotPasswordEmailLink } from '../../utils/create_forgot_password_email_link';
-import createTypeormConnection from '../../utils/create_typeorm_connection';
-import { lockAccountOnForgotPassword } from '../../utils/lock_account_on_forgot_password';
+import { createForgotPasswordEmailLink } from '../../utils/auth/create_forgot_password_email_link';
+import createTypeormConnection from '../../utils/server/create_typeorm_connection';
+import { lockAccountOnForgotPassword } from '../../utils/auth/lock_account_on_forgot_password';
 
 import Redis = require('ioredis');
 const redis = new Redis();

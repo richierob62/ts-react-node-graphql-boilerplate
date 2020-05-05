@@ -1,4 +1,4 @@
-import { Resolver } from '../../utils/resolver_types';
+import { Resolver } from '../../utils/server/resolver_types';
 
 export default async (
   resolver: Resolver,

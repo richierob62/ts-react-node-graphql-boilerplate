@@ -1,6 +1,6 @@
 import { Connection } from 'typeorm';
-import { TestClient } from '../../utils/TestClient';
-import createTypeormConnection from '../../utils/create_typeorm_connection';
+import { TestClient } from '../../utils/tests/TestClient';
+import createTypeormConnection from '../../utils/server/create_typeorm_connection';
 
 const graphql_endpoint = 'http://localhost:3001/graphql';
 

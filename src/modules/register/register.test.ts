@@ -1,8 +1,8 @@
 import { Connection } from 'typeorm';
-import { TestClient } from '../../utils/TestClient';
+import { TestClient } from '../../utils/tests/TestClient';
 import { User } from '../../entity/User';
-import { createConfirmEmailLink } from '../../utils/create_confirm_email_link';
-import createTypeormConnection from '../../utils/create_typeorm_connection';
+import { createConfirmEmailLink } from '../../utils/auth/create_confirm_email_link';
+import createTypeormConnection from '../../utils/server/create_typeorm_connection';
 import fetch from 'node-fetch';
 import Redis = require('ioredis');
 

@@ -1,6 +1,6 @@
-import { ResolverMap } from '../../utils/resolver_types';
+import { ResolverMap } from '../../utils/server/resolver_types';
 import { User } from '../../entity/User';
-import { applyGQLMiddleware } from '../../utils/apply_gql_middleware';
+import { applyGQLMiddleware } from '../../utils/server/apply_gql_middleware';
 import middleware from './middleware';
 
 export const resolvers: ResolverMap = {

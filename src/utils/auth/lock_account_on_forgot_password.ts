@@ -1,5 +1,5 @@
 import { Redis } from 'ioredis';
-import { User } from '../entity/User';
+import { User } from '../../entity/User';
 import { removeUserSessions } from './remove_users_sessions';
 
 export const lockAccountOnForgotPassword = async (

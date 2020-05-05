@@ -1,9 +1,9 @@
 import { Profile } from '../../entity/Profile';
-import { ResolverMap } from '../../utils/resolver_types';
+import { ResolverMap } from '../../utils/server/resolver_types';
 import { User } from '../../entity/User';
-import { createConfirmEmailLink } from '../../utils/create_confirm_email_link';
-import { emailAndPasswordValidation } from '../../utils/yup_schemas';
-import { formatYupError } from '../../utils/format_yup_error';
+import { createConfirmEmailLink } from '../../utils/auth/create_confirm_email_link';
+import { emailAndPasswordValidation } from '../../utils/validation/yup_schemas';
+import { formatYupError } from '../../utils/validation/format_yup_error';
 
 export const resolvers: ResolverMap = {
   Query: {

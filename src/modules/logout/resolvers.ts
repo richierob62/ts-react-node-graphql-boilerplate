@@ -1,5 +1,5 @@
-import { ResolverMap } from '../../utils/resolver_types';
-import { removeUserSessions } from '../../utils/remove_users_sessions';
+import { ResolverMap } from '../../utils/server/resolver_types';
+import { removeUserSessions } from '../../utils/auth/remove_users_sessions';
 
 export const resolvers: ResolverMap = {
   Query: {

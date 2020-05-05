@@ -9,14 +9,14 @@ import { importSchema } from 'graphql-import';
 const generateSchema = () => {
   const schemas: GraphQLSchema[] = [];
   const folders = fs
-    .readdirSync(path.join(__dirname, '../modules'))
+    .readdirSync(path.join(__dirname, '../../modules'))
     .filter((name) => name.indexOf('.') === -1);
 
   folders.forEach((folder) => {
     if (folder !== 'shared') {
-      const { resolvers } = require(`../modules/${folder}/resolvers`);
+      const { resolvers } = require(`../../modules/${folder}/resolvers`);
       const typeDefs = importSchema(
-        path.join(__dirname, `../modules/${folder}/schema.graphql`)
+        path.join(__dirname, `../../modules/${folder}/schema.graphql`)
       );
       schemas.push(makeExecutableSchema({ resolvers, typeDefs }));
     }

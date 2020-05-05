@@ -1,9 +1,9 @@
-import { ResolverMap } from '../../utils/resolver_types';
+import { ResolverMap } from '../../utils/server/resolver_types';
 import { User } from '../../entity/User';
-import { createForgotPasswordEmailLink } from '../../utils/create_forgot_password_email_link';
-import { formatYupError } from '../../utils/format_yup_error';
-import { lockAccountOnForgotPassword } from '../../utils/lock_account_on_forgot_password';
-import { passwordValidation } from '../../utils/yup_schemas';
+import { createForgotPasswordEmailLink } from '../../utils/auth/create_forgot_password_email_link';
+import { formatYupError } from '../../utils/validation/format_yup_error';
+import { lockAccountOnForgotPassword } from '../../utils/auth/lock_account_on_forgot_password';
+import { passwordValidation } from '../../utils/validation/yup_schemas';
 
 export const resolvers: ResolverMap = {
   Query: {

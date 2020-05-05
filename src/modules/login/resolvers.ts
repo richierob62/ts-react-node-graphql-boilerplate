@@ -1,6 +1,6 @@
 import * as bcrypt from 'bcrypt';
 
-import { ResolverMap } from '../../utils/resolver_types';
+import { ResolverMap } from '../../utils/server/resolver_types';
 import { User } from '../../entity/User';
 
 export const resolvers: ResolverMap = {
