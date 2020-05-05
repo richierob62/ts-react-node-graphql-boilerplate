@@ -5,3 +5,4 @@ build/
 ormconfig.json
 dump.rdb
 .env
+.DS_Store
