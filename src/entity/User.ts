@@ -20,17 +20,17 @@ export class User extends BaseEntity {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ type: 'varchar', length: '100' })
-  firstName: string;
+  @Column({ type: 'varchar', length: '100', nullable: true })
+  firstName: string | null;
 
-  @Column({ type: 'varchar', length: '100' })
-  lastName: string;
+  @Column({ type: 'varchar', length: '100', nullable: true })
+  lastName: string | null;
 
-  @Column({ type: 'varchar', length: '100', unique: true })
-  email: string;
+  @Column({ type: 'varchar', length: '100', unique: true, nullable: true })
+  email: string | null;
 
-  @Column('text')
-  password: string;
+  @Column('text', { nullable: true })
+  password: string | null;
 
   @Column({ type: 'boolean', default: false })
   confirmed: boolean;
@@ -40,6 +40,9 @@ export class User extends BaseEntity {
 
   @Column({ nullable: true })
   profileId: number;
+
+  @Column({ type: 'varchar', length: '255', nullable: true })
+  twitter_id: string | null;
 
   @OneToOne(() => Profile, { cascade: true, onDelete: 'CASCADE' })
   @JoinColumn()
@@ -55,6 +58,8 @@ export class User extends BaseEntity {
 
   @BeforeInsert()
   async hashPasswordBeforeInsert() {
-    this.password = await bcrypt.hash(this.password, 12);
+    if (this.password) {
+      this.password = await bcrypt.hash(this.password, 12);
+    }
   }
 }

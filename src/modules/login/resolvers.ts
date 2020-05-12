@@ -30,6 +30,16 @@ export const resolvers: ResolverMap = {
             },
           ];
 
+        if (!user.password) {
+          // user logged in using oauth
+          return [
+            {
+              path: 'email',
+              message: 'Invalid credentials',
+            },
+          ];
+        }
+
         const validPassword = await bcrypt.compare(password, user.password);
 
         if (!validPassword) throw new Error();
