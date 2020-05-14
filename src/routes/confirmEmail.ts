@@ -9,5 +9,5 @@ export const confirmEmail = async (req: Request, res: Response) => {
   if (!userId) return res.send('invalid');
   await User.update({ id: parseInt(userId) }, { confirmed: true });
   await redis.del(id);
-  return res.send('ok'); // or redirect
+  return res.redirect(`${process.env.FRONT_END_DOMAIN}/`);
 };
