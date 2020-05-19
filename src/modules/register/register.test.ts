@@ -1,9 +1,12 @@
+import * as faker from 'faker';
+
 import { Connection } from 'typeorm';
 import { TestClient } from '../../utils/tests/TestClient';
 import { User } from '../../entity/User';
 import { createConfirmEmailLink } from '../../utils/auth/create_confirm_email_link';
 import createTypeormConnection from '../../utils/server/create_typeorm_connection';
 import fetch from 'node-fetch';
+
 import Redis = require('ioredis');
 
 const graphql_endpoint = 'http://localhost:3001/graphql';
@@ -24,8 +27,8 @@ describe('register', () => {
   it('can register user', async () => {
     const client = new TestClient(graphql_endpoint);
 
-    const email = `first@example.com`;
-    const password = 'password';
+    const email = faker.internet.email();
+    const password = faker.internet.password();
 
     const result = await client.register(email, password, 'first', 'last');
 
@@ -44,8 +47,8 @@ describe('register', () => {
   it('returns error for duplicate email', async () => {
     const client = new TestClient(graphql_endpoint);
 
-    const email = `first@example.com`;
-    const password = 'password';
+    const email = faker.internet.email();
+    const password = faker.internet.password();
 
     await client.register(email, password, 'first', 'last');
 
@@ -89,8 +92,8 @@ describe('register', () => {
   it('sends confirmation email', async () => {
     const client = new TestClient(graphql_endpoint);
 
-    const email = `first@example.com`;
-    const password = 'password';
+    const email = faker.internet.email();
+    const password = faker.internet.password();
 
     await client.register(email, password, 'first', 'last');
 
@@ -102,7 +105,7 @@ describe('register', () => {
     const response = await fetch(url);
     const text = await response.text();
 
-    expect(text).toBe('ok');
+    expect(text).toContain('<!DOCTYPE html>');
 
     const user = await User.findOne({ id });
     expect(user && user.confirmed).toBeTruthy();
@@ -117,8 +120,8 @@ describe('register', () => {
   it('returns invalid for invalid confirmation key', async () => {
     const client = new TestClient(graphql_endpoint);
 
-    const email = `first@example.com`;
-    const password = 'password';
+    const email = faker.internet.email();
+    const password = faker.internet.password();
 
     await client.register(email, password, 'first', 'last');
 

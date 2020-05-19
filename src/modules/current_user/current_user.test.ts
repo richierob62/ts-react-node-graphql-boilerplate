@@ -1,3 +1,5 @@
+import * as faker from 'faker';
+
 import { Connection } from 'typeorm';
 import { TestClient } from '../../utils/tests/TestClient';
 import createTypeormConnection from '../../utils/server/create_typeorm_connection';
@@ -26,8 +28,8 @@ describe('current user', () => {
   it('returns current user', async () => {
     const client = new TestClient(graphql_endpoint);
 
-    const email = `first@example.com`;
-    const password = 'password';
+    const email = faker.internet.email();
+    const password = faker.internet.password();
 
     await client.register(email, password, 'first', 'last');
     await client.confirmUserByEmail(email);

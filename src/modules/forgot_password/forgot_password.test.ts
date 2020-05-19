@@ -1,3 +1,5 @@
+import * as faker from 'faker';
+
 import { Connection } from 'typeorm';
 import { TestClient } from '../../utils/tests/TestClient';
 import { User } from '../../entity/User';
@@ -24,8 +26,8 @@ describe('forgot_password', () => {
   it('can change password with key from email', async () => {
     const client = new TestClient(graphql_endpoint);
 
-    const email = `first@example.com`;
-    const password = 'password';
+    const email = faker.internet.email();
+    const password = faker.internet.password();
 
     await client.register(email, password, 'first', 'last');
     await client.confirmUserByEmail(email);

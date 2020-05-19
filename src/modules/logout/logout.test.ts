@@ -1,3 +1,5 @@
+import * as faker from 'faker';
+
 import { Connection } from 'typeorm';
 import { TestClient } from '../../utils/tests/TestClient';
 import createTypeormConnection from '../../utils/server/create_typeorm_connection';
@@ -19,8 +21,8 @@ describe('logout', () => {
     const client1 = new TestClient(graphql_endpoint);
     const client2 = new TestClient(graphql_endpoint);
 
-    const email = `first@example.com`;
-    const password = 'password';
+    const email = faker.internet.email();
+    const password = faker.internet.password();
 
     await client1.register(email, password, 'first', 'last');
     await client1.confirmUserByEmail(email);
@@ -43,8 +45,8 @@ describe('logout', () => {
   it('logs out current user from single session', async () => {
     const client = new TestClient(graphql_endpoint);
 
-    const email = `first@example.com`;
-    const password = 'password';
+    const email = faker.internet.email();
+    const password = faker.internet.password();
 
     await client.register(email, password, 'first', 'last');
     await client.confirmUserByEmail(email);
