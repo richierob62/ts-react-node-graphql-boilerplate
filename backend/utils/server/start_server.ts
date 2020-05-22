@@ -9,13 +9,15 @@ import * as session from 'express-session';
 import { ApolloServer } from 'apollo-server-express';
 import { Connection } from 'typeorm';
 import { confirmEmail } from '../../routes/confirmEmail';
+import createSchema from './create_schema';
 import createTypeormConnection from './create_typeorm_connection';
-import generateSchema from './generate_schema';
+// import generateSchema from './generate_schema';
 import redis from '../redis/redis';
 import twitterStrategy from '../auth/twitter_oauth';
 
 const startServer = async (port: string) => {
-  const schema = generateSchema();
+  // const schema = generateSchema();
+  const schema = await createSchema();
   const app = express();
 
   // request body creation
@@ -100,8 +102,9 @@ const startServer = async (port: string) => {
   app.use(passport.initialize());
 
   // server
-  await app.listen({ port });
-  await console.log(`Server ready at http://localhost:${port}`);
+  app.listen({ port }, () =>
+    console.log(`Server ready at http://localhost:${port}`)
+  );
 };
 
 export default startServer;
