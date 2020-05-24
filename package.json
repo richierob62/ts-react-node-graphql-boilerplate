@@ -4,8 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "NODE_ENV=development ts-node-dev  backend/index.ts",
-    "test-server": "NODE_ENV=testing ts-node-dev  backend/index.ts",
+    "start": "NODE_ENV=development ts-node-dev --no-notify --respawn --ignore-watch node_modules backend/index.ts",
+    "test-server": "NODE_ENV=testing ts-node-dev --no-notify --respawn --ignore-watch node_modules backend/index.ts",
     "test": "NODE_ENV=testing jest --watch --runInBand"
   },
   "jest": {
