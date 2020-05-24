@@ -1,8 +1,7 @@
-import * as faker from 'faker';
-
 import { Connection } from 'typeorm';
 import { TestClient } from '../../utils/tests/TestClient';
 import createTypeormConnection from '../../utils/server/create_typeorm_connection';
+import faker from 'faker';
 
 const graphql_endpoint = 'http://localhost:3001/graphql';
 

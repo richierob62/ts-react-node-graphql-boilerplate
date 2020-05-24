@@ -1,10 +1,9 @@
-import * as fs from 'fs';
-import * as path from 'path';
-
 import { makeExecutableSchema, mergeSchemas } from 'graphql-tools';
 
 import { GraphQLSchema } from 'graphql';
+import fs from 'fs';
 import { importSchema } from 'graphql-import';
+import path from 'path';
 
 const generateSchema = () => {
   const schemas: GraphQLSchema[] = [];

@@ -1,18 +1,17 @@
-import * as RateLimitRedisStore from 'rate-limit-redis';
-import * as connectRedis from 'connect-redis';
-import * as cors from 'cors';
-import * as express from 'express';
-import * as passport from 'passport';
-import * as rateLimit from 'express-rate-limit';
-import * as session from 'express-session';
-
 import { ApolloServer } from 'apollo-server-express';
 import { Connection } from 'typeorm';
+import RateLimitRedisStore from 'rate-limit-redis';
 import { confirmEmail } from '../../routes/confirmEmail';
+import connectRedis from 'connect-redis';
+import cors from 'cors';
 import createSchema from './create_schema';
 import createTypeormConnection from './create_typeorm_connection';
+import express from 'express';
+import passport from 'passport';
+import rateLimit from 'express-rate-limit';
 // import generateSchema from './generate_schema';
 import redis from '../redis/redis';
+import session from 'express-session';
 import twitterStrategy from '../auth/twitter_oauth';
 
 const startServer = async (port: string) => {

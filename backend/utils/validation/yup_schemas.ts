@@ -1,4 +1,4 @@
-import * as yup from 'yup';
+import yup from 'yup';
 
 export const emailAndPasswordValidation = yup.object().shape({
   email: yup.string().min(3).max(100).email(),

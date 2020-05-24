@@ -1,6 +1,5 @@
-import * as rp from 'request-promise';
-
 import { User } from '../../entity/User';
+import rp from 'request-promise';
 
 export class TestClient {
   options: {
