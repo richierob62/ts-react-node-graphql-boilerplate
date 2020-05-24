@@ -9,7 +9,7 @@ import {
   OneToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
-import { Field, ID, ObjectType } from 'type-graphql';
+import { Field, ID, ObjectType, Root } from 'type-graphql';
 
 import { Photo } from './Photo';
 import { Profile } from './Profile';
@@ -31,9 +31,6 @@ export class User extends BaseEntity {
   lastName: string | null;
 
   @Field(() => String, { nullable: true })
-  fullName: string | null;
-
-  @Field(() => String, { nullable: true })
   @Column({ type: 'varchar', length: '100', unique: true, nullable: true })
   email: string | null;
 
@@ -52,6 +49,15 @@ export class User extends BaseEntity {
   @Column({ type: 'varchar', length: '255', nullable: true })
   twitter_id: string | null;
 
+  // Calculated fields
+  @Field()
+  fullName(@Root() parent: User): string {
+    return `${parent.firstName || ''}${parent.firstName ? ' ' : ''}${
+      parent.lastName || ''
+    }`;
+  }
+
+  // Relations
   @OneToOne(() => Profile, { cascade: true, onDelete: 'CASCADE' })
   @JoinColumn({ name: 'profile_id' })
   profile: Profile;
@@ -59,6 +65,7 @@ export class User extends BaseEntity {
   @OneToMany(() => Photo, (photo) => photo.user)
   photos: Photo[];
 
+  // Actions
   @BeforeUpdate()
   async hashPasswordBeforeUpdate() {
     this.password = await bcrypt.hash(this.password, 12);

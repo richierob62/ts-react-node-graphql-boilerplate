@@ -1,11 +1,4 @@
-import {
-  Mutation,
-  // Query,
-  Resolver,
-  Arg,
-  FieldResolver,
-  Root,
-} from 'type-graphql';
+import { Mutation, Resolver, Arg } from 'type-graphql';
 import { User } from '../../entity/User';
 
 // import { Profile } from '../../entity/Profile';
@@ -52,18 +45,8 @@ import { User } from '../../entity/User';
 //   },
 // };
 
-@Resolver(User)
+@Resolver()
 export class RegisterResolver {
-  // @Query(() => Number)
-  // dummy() {
-  //   return `dummy query`;
-  // }
-
-  @FieldResolver(() => String)
-  fullName(@Root() usr: User) {
-    return `${usr.firstName} ${usr.lastName}`;
-  }
-
   @Mutation(() => User)
   async register(
     @Arg('email') email: string,
