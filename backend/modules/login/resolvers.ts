@@ -1,65 +1,48 @@
-import { ResolverMap } from '../../utils/server/resolver_types';
 import { User } from '../../entity/User';
 import bcrypt from 'bcrypt';
+import { LoginInput } from './login_input';
+import { Mutation, Resolver, Arg, Ctx } from 'type-graphql';
+import { Context } from '../../utils/server/resolver_types';
+import { AuthenticationError } from 'apollo-server-express';
 
-export const resolvers: ResolverMap = {
-  Query: {
-    dummy2: () => 'ignore',
-  },
-  Mutation: {
-    login: async (_, { email, password }, { req, redis }) => {
-      try {
-        const user = await User.findOne({ where: { email } });
+@Resolver()
+export class LoginResolver {
+  @Mutation(() => User, { nullable: true })
+  async login(
+    @Arg('data') data: LoginInput,
+    @Ctx() ctx: Context
+  ): Promise<User | undefined> {
+    const user = await User.findOne({ where: { email: data.email } });
 
-        if (!user) throw new Error();
+    if (!user) throw new AuthenticationError('Invalid credentials');
 
-        if (!user.confirmed)
-          return [
-            {
-              path: 'email',
-              message: 'Please confirm your email address (see email sent)',
-            },
-          ];
+    if (!user.confirmed)
+      throw new AuthenticationError(
+        'Please confirm your email address (see email sent'
+      );
 
-        if (user.account_locked)
-          return [
-            {
-              path: 'email',
-              message: 'Your account has been locked',
-            },
-          ];
+    if (user.account_locked)
+      throw new AuthenticationError('Your account has been locked');
 
-        if (!user.password) {
-          // user logged in using oauth
-          return [
-            {
-              path: 'email',
-              message: 'Invalid credentials',
-            },
-          ];
-        }
+    if (!user.password) {
+      // user logged in using oauth
+      throw new AuthenticationError(
+        'Invalid credentials.  Try again or use social media login'
+      );
+    }
 
-        const validPassword = await bcrypt.compare(password, user.password);
+    const validPassword = await bcrypt.compare(data.password, user.password);
 
-        if (!validPassword) throw new Error();
+    if (!validPassword) throw new AuthenticationError('Invalid credentials');
 
-        (req.session as any).userId = user.id;
-        if (req.sessionID) {
-          await redis.lpush(`user_sid:${user.id}`, req.sessionID);
-        }
+    const { req, redis } = ctx;
 
-        return null;
-      } catch (e) {
-        return [
-          {
-            path: 'email',
-            message: 'Invalid credentials',
-          },
-        ];
-      }
-    },
-  },
-};
+    req.session!.userId = user.id;
 
-// QueryBuilder
-// https://typeorm.io/#/select-query-builder
+    if (req.sessionID) {
+      await redis.lpush(`user_sid:${user.id}`, req.sessionID);
+    }
+
+    return user;
+  }
+}

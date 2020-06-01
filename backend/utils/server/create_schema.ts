@@ -1,7 +1,14 @@
 // import fs from 'fs';
 // import path from 'path';
 
+import {
+  SampleAuthResolver,
+  SampleAuthResolver2,
+} from '../../modules/sample_auth_resolver.ts/resolvers';
+
+import { ConfirmEmailResolver } from '../../modules/confirm_email/resolvers';
 import { CurrentUserResolver } from '../../modules/current_user/resolvers';
+import { LoginResolver } from '../../modules/login/resolvers';
 import { RegisterResolver } from '../../modules/register/resolvers';
 import { buildSchema } from 'type-graphql';
 
@@ -23,7 +30,14 @@ const createSchema = async () => {
   // if (resolvers.length === 0) throw new Error();
   // return schema;
   const schema = await buildSchema({
-    resolvers: [CurrentUserResolver, RegisterResolver],
+    resolvers: [
+      CurrentUserResolver,
+      RegisterResolver,
+      LoginResolver,
+      SampleAuthResolver,
+      SampleAuthResolver2,
+      ConfirmEmailResolver,
+    ],
   });
 
   return schema;

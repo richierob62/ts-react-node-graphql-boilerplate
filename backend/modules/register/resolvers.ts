@@ -1,81 +1,36 @@
-import { Mutation, Resolver, Arg } from 'type-graphql';
+import { Mutation, Resolver, Arg, Ctx } from 'type-graphql';
 import { User } from '../../entity/User';
-
-// import { Profile } from '../../entity/Profile';
-// import { ResolverMap } from '../../utils/server/resolver_types';
-// import { User } from '../../entity/User';
-// import { createConfirmEmailLink } from '../../utils/auth/create_confirm_email_link';
-// import { emailAndPasswordValidation } from '../../utils/validation/yup_schemas';
-// import { formatYupError } from '../../utils/validation/format_yup_error';
-
-// export const resolvers: ResolverMap = {
-//   Query: {
-//     dummy: () => 'ignore',
-//   },
-//   Mutation: {
-//     register: async (_, args, { redis, confirmUrl }) => {
-//       try {
-//         try {
-//           await emailAndPasswordValidation.validate(args, {
-//             abortEarly: false,
-//           });
-//         } catch (e) {
-//           return formatYupError(e);
-//         }
-
-//         // const { email, passord } = args;
-//         const userData = { ...args } as User;
-//         delete userData.profile;
-
-//         let profile;
-//         if (args.profile) {
-//           const profileData = args.profile as Profile;
-//           profile = Profile.create(profileData);
-//           await Profile.save(profile);
-//           userData.profileId = profile.id;
-//         }
-
-//         await createConfirmEmailLink(confirmUrl, user.id, redis);
-
-//         return null;
-//       } catch (e) {
-
-//       }
-//     },
-//   },
-// };
+import { RegisterInput } from './register_input';
+import { sendEmail, EmailData } from '../../utils/mail/send_email';
+import { createConfirmEmailLink } from '../../utils/auth/create_confirm_email_link';
+import { Context } from '../../utils/server/resolver_types';
 
 @Resolver()
 export class RegisterResolver {
   @Mutation(() => User)
   async register(
-    @Arg('email') email: string,
-    @Arg('password') password: string
-  ): Promise<User | any[]> {
-    try {
-      const userWithEmail = await User.findOne({
-        where: { email },
-        select: ['id'],
-      });
+    @Arg('data') data: RegisterInput,
+    @Ctx() ctx: Context
+  ): Promise<User> {
+    const user = User.create(data);
+    await user.save();
 
-      if (userWithEmail) {
-        throw new Error();
-      }
+    const link = await createConfirmEmailLink(
+      ctx.confirmUrl,
+      user.id,
+      ctx.redis
+    );
 
-      const user = User.create({ email, password });
-      await user.save();
+    const mailData: EmailData = {
+      from: '"Mr. From" <from@example.com>',
+      to: '"Ms. To" <to@example.com>',
+      subject: 'Confirmation Email',
+      text: `please confirm your email by visiting ${link}`,
+      html: `please confirm your email by visiting <a href="${link}">${link}</a>`,
+    };
 
-      return user;
-    } catch (e) {
-      return [
-        {
-          path: 'email',
-          message: 'email already registered',
-        },
-      ];
-    }
+    await sendEmail(mailData);
+
+    return user;
   }
 }
-
-// QueryBuilder
-// https://typeorm.io/#/select-query-builder

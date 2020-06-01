@@ -10,7 +10,7 @@ import {
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { Field, ID, ObjectType, Root } from 'type-graphql';
-
+import properCase from '../utils/proper_case';
 import { Photo } from './Photo';
 import { Profile } from './Profile';
 import bcrypt from 'bcrypt';
@@ -52,9 +52,9 @@ export class User extends BaseEntity {
   // Calculated fields
   @Field()
   fullName(@Root() parent: User): string {
-    return `${parent.firstName || ''}${parent.firstName ? ' ' : ''}${
-      parent.lastName || ''
-    }`;
+    const first = properCase(parent.firstName || '').trim();
+    const last = properCase(parent.lastName || '').trim();
+    return first + (first && ' ') + last;
   }
 
   // Relations
