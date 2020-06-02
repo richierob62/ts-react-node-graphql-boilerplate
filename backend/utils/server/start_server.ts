@@ -30,7 +30,7 @@ const startServer = async (port: string) => {
 
   app.use(
     session({
-      name: 'rid',
+      name: process.env.SESSION_NAME,
       secret: process.env.SESSION_SECRET!,
       store: new SessionRedisStore({ client: redis, prefix: 'sess:' }),
       resave: false,

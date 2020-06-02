@@ -9,6 +9,7 @@ import {
 import { ConfirmEmailResolver } from '../../modules/confirm_email/resolvers';
 import { CurrentUserResolver } from '../../modules/current_user/resolvers';
 import { LoginResolver } from '../../modules/login/resolvers';
+import { LogoutResolver } from '../../modules/logout/resolvers';
 import { RegisterResolver } from '../../modules/register/resolvers';
 import { buildSchema } from 'type-graphql';
 
@@ -37,6 +38,7 @@ const createSchema = async () => {
       SampleAuthResolver,
       SampleAuthResolver2,
       ConfirmEmailResolver,
+      LogoutResolver,
     ],
   });
 

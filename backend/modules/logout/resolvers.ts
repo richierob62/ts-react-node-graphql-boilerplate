@@ -1,25 +1,20 @@
-import { ResolverMap } from '../../utils/server/resolver_types';
+import { Mutation, Resolver, Ctx } from 'type-graphql';
+import { Context } from '../../utils/server/resolver_types';
 import { removeUserSessions } from '../../utils/auth/remove_users_sessions';
 
-export const resolvers: ResolverMap = {
-  Query: {
-    dummy4: () => 'ignore',
-  },
-  Mutation: {
-    logout: async (_, __, { req, redis }) => {
-      if (!req.session) return false;
+@Resolver()
+export class LogoutResolver {
+  @Mutation(() => Boolean)
+  async logout(@Ctx() ctx: Context): Promise<boolean> {
+    if (!ctx.req.session) return false;
 
-      const { userId } = req.session;
+    const { userId } = ctx.req.session;
 
-      if (userId) {
-        removeUserSessions(parseInt(userId), redis);
-        return true;
-      }
+    if (userId) {
+      await removeUserSessions(parseInt(userId), ctx.redis, ctx.res);
+      return true;
+    }
 
-      return false;
-    },
-  },
-};
-
-// QueryBuilder
-// https://typeorm.io/#/select-query-builder
+    return false;
+  }
+}
