@@ -1,7 +1,6 @@
 import { ApolloServer } from 'apollo-server-express';
 import { Connection } from 'typeorm';
 import RateLimitRedisStore from 'rate-limit-redis';
-import { confirmEmail } from '../../routes/confirmEmail';
 import connectRedis from 'connect-redis';
 import cors from 'cors';
 import createSchema from './create_schema';
@@ -68,8 +67,6 @@ const startServer = async (port: string) => {
 
   // non-graphql endpoints
   // -----------------------------------------------------------------------
-  app.get('/confirm/:id', confirmEmail);
-
   app.get('/auth/twitter', passport.authenticate('twitter'));
 
   app.get(
