@@ -1,9 +1,7 @@
 import { ResolverMap } from '../../utils/server/resolver_types';
 import { User } from '../../entity/User';
 import { createForgotPasswordEmailLink } from '../../utils/auth/create_forgot_password_email_link';
-import { formatYupError } from '../../utils/validation/format_yup_error';
-import { lockAccountOnForgotPassword } from '../../utils/auth/lock_account_on_forgot_password';
-import { passwordValidation } from '../../utils/validation/yup_schemas';
+// import { lockAccountOnForgotPassword } from '../../utils/auth/lock_account_on_forgot_password';
 
 export const resolvers: ResolverMap = {
   Query: {
@@ -20,7 +18,7 @@ export const resolvers: ResolverMap = {
           },
         ];
 
-      await lockAccountOnForgotPassword(user.id, redis);
+      // await lockAccountOnForgotPassword(user.id, redis);
 
       const url = await createForgotPasswordEmailLink(
         process.env.FRONT_END_DOMAIN as string,
@@ -44,16 +42,16 @@ export const resolvers: ResolverMap = {
           },
         ];
 
-      try {
-        await passwordValidation.validate(
-          { password: newPassword },
-          {
-            abortEarly: false,
-          }
-        );
-      } catch (e) {
-        return formatYupError(e);
-      }
+      // try {
+      //   await passwordValidation.validate(
+      //     { password: newPassword },
+      //     {
+      //       abortEarly: false,
+      //     }
+      //   );
+      // } catch (e) {
+      //   return formatYupError(e);
+      // }
 
       await User.update(
         { id: parseInt(userId) },

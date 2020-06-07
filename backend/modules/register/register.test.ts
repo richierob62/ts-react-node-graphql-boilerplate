@@ -1,18 +1,24 @@
 import { Connection } from 'typeorm';
+// import { RegisterInput } from './register_input';
 import { TestClient } from '../../utils/tests/TestClient';
 import { User } from '../../entity/User';
-import { createConfirmEmailLink } from '../../utils/auth/create_confirm_email_link';
+import { buildErrorObject } from '../../utils/auth/build_error_object';
+// import { User } from '../../entity/User';
+// import { createConfirmEmailLink } from '../../utils/auth/create_confirm_email_link';
 import createTypeormConnection from '../../utils/server/create_typeorm_connection';
-import faker from 'faker';
-import fetch from 'node-fetch';
+// import faker from 'faker';
 
-import Redis = require('ioredis');
+// import Redis = require('ioredis');
 
-const graphql_endpoint = 'http://localhost:3001/graphql';
-const domain = 'http://localhost:3001';
+// const domain = 'http://localhost:3001';
 
 let conn: Connection;
-const redis = new Redis();
+let client: TestClient;
+// const redis = new Redis();
+
+beforeAll(() => {
+  client = new TestClient();
+});
 
 beforeEach(async () => {
   conn = await createTypeormConnection();
@@ -24,114 +30,131 @@ afterEach(async () => {
 
 describe('register', () => {
   it('can register user', async () => {
-    const client = new TestClient(graphql_endpoint);
-
-    const email = faker.internet.email();
-    const password = faker.internet.password();
-
-    const result = await client.register(email, password, 'first', 'last');
-
-    const expected = {
-      register: null,
+    const data: any = {
+      email: 'foo@example.com',
+      password: '123456',
+      firstName: '',
+      lastName: '',
     };
 
-    expect(result.data).toEqual(expected);
+    const { email } = data;
+    const result = await client.register(data);
 
+    expect(result.data.register.email).toEqual(email);
     const users = await User.find({ email });
     expect(users).toHaveLength(1);
     expect(users[0].email).toEqual(email);
-    expect(users[0].password).not.toEqual(password);
   });
 
   it('returns error for duplicate email', async () => {
-    const client = new TestClient(graphql_endpoint);
+    const data: any = {
+      email: 'foo@example.com',
+      password: '123456',
+      firstName: '',
+      lastName: '',
+    };
 
-    const email = faker.internet.email();
-    const password = faker.internet.password();
+    await client.register(data);
 
-    await client.register(email, password, 'first', 'last');
+    const result = await client.register(data);
 
-    const result = await client.register(email, password, 'first', 'last');
+    const errors = buildErrorObject(result);
 
-    const expected = JSON.stringify({
-      register: [{ path: 'email', message: 'email already registered' }],
-    });
-
-    expect(JSON.stringify(result.data)).toEqual(expected);
-  });
-
-  it('checks for valid email and password', async () => {
-    const client = new TestClient(graphql_endpoint);
-
-    const result = await client.register('aa', 'pp', 'first', 'last');
-
-    expect(result.data.register.length).toBe(3);
-
-    const stringifyResponse = JSON.stringify(result);
-
-    expect(stringifyResponse).toContain(
-      JSON.stringify({
-        path: 'email',
-        message: 'email must be at least 3 characters',
-      })
+    const matchingErrors = errors.filter(
+      (e: any) =>
+        e.messages.indexOf('That email is already registered') !== -1 &&
+        e.property === 'email'
     );
 
-    expect(stringifyResponse).toContain(
-      JSON.stringify({ path: 'email', message: 'email must be a valid email' })
-    );
-
-    expect(stringifyResponse).toContain(
-      JSON.stringify({
-        path: 'password',
-        message: 'password must be at least 3 characters',
-      })
-    );
+    expect(matchingErrors.length).toEqual(1);
   });
 
-  it('sends confirmation email', async () => {
-    const client = new TestClient(graphql_endpoint);
+  // it('checks for valid email and password', async () => {
+  //   const client = new TestClient(graphql_endpoint);
 
-    const email = faker.internet.email();
-    const password = faker.internet.password();
+  //   const data: RegisterInput = {
+  //     email: 'ee',
+  //     password: 'pp',
+  //     firstName: 'first',
+  //     lastName: 'last',
+  //   };
+  //   const result = await client.register(data);
 
-    await client.register(email, password, 'first', 'last');
+  //   expect(result.data.register.length).toBe(3);
 
-    const users = await User.find({ email });
-    const { id } = users[0];
+  //   const stringifyResponse = JSON.stringify(result);
 
-    const url = await createConfirmEmailLink(domain, id, redis);
+  //   expect(stringifyResponse).toContain(
+  //     JSON.stringify({
+  //       path: 'email',
+  //       message: 'email must be at least 3 characters',
+  //     })
+  //   );
 
-    const response = await fetch(url);
-    const text = await response.text();
+  //   expect(stringifyResponse).toContain(
+  //     JSON.stringify({ path: 'email', message: 'email must be a valid email' })
+  //   );
 
-    expect(text).toContain('<!DOCTYPE html>');
+  //   expect(stringifyResponse).toContain(
+  //     JSON.stringify({
+  //       path: 'password',
+  //       message: 'password must be at least 3 characters',
+  //     })
+  //   );
+  // });
 
-    const user = await User.findOne({ id });
-    expect(user && user.confirmed).toBeTruthy();
+  // it('sends confirmation email', async () => {
+  //   const client = new TestClient(graphql_endpoint);
 
-    const chunks = url.split('/');
-    const redisKey = chunks[chunks.length - 1];
-    const val = await redis.get(redisKey);
+  //   const data: RegisterInput = {
+  //     email: faker.internet.email(),
+  //     password: faker.internet.password(),
+  //     firstName: 'first',
+  //     lastName: 'last',
+  //   };
 
-    expect(val).toBeNull();
-  });
+  //   await client.register(data);
 
-  it('returns invalid for invalid confirmation key', async () => {
-    const client = new TestClient(graphql_endpoint);
+  //   const users = await User.find({ email: data.email });
+  //   const { id } = users[0];
 
-    const email = faker.internet.email();
-    const password = faker.internet.password();
+  //   const url = await createConfirmEmailLink(domain, id, redis);
 
-    await client.register(email, password, 'first', 'last');
+  //   const response = await fetch(url);
+  //   const text = await response.text();
 
-    const users = await User.find({ email });
-    const { id } = users[0];
+  //   expect(text).toContain('<!DOCTYPE html>');
 
-    const url = (await createConfirmEmailLink(domain, id, redis)) + 'junk';
+  //   const user = await User.findOne({ id });
+  //   expect(user && user.confirmed).toBeTruthy();
 
-    const response = await fetch(url);
-    const text = await response.text();
+  //   const chunks = url.split('/');
+  //   const redisKey = chunks[chunks.length - 1];
+  //   const val = await redis.get(redisKey);
 
-    expect(text).toBe('invalid');
-  });
+  //   expect(val).toBeNull();
+  // });
+
+  // it('returns invalid for invalid confirmation key', async () => {
+  //   const client = new TestClient(graphql_endpoint);
+
+  //   const data: RegisterInput = {
+  //     email: faker.internet.email(),
+  //     password: faker.internet.password(),
+  //     firstName: 'first',
+  //     lastName: 'last',
+  //   };
+
+  //   await client.register(data);
+
+  //   const users = await User.find({ email: data.email });
+  //   const { id } = users[0];
+
+  //   const url = (await createConfirmEmailLink(domain, id, redis)) + 'junk';
+
+  //   const response = await fetch(url);
+  //   const text = await response.text();
+
+  //   expect(text).toBe('invalid');
+  // });
 });
