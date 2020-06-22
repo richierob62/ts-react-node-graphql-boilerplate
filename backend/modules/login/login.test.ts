@@ -1,14 +1,17 @@
-import { Connection } from 'typeorm';
-import { TestClient } from '../../utils/tests/TestClient';
-import createTypeormConnection from '../../utils/server/create_typeorm_connection';
-import faker from 'faker';
+import { loginMutation, registerMutation } from '../../graphql/queries';
 
-const graphql_endpoint = 'http://localhost:3001/graphql';
+import { Connection } from 'typeorm';
+import { LoginInput } from './login_input';
+import { RegisterInput } from '../register/RegisterInput';
+import { User } from '../../entity/User';
+import faker from 'faker';
+import gqlCall from '../../utils/tests/gql_call';
+import { testConn } from '../../utils/tests/testConn';
 
 let conn: Connection;
 
 beforeEach(async () => {
-  conn = await createTypeormConnection();
+  conn = await testConn(true);
 });
 
 afterEach(async () => {
@@ -17,73 +20,80 @@ afterEach(async () => {
 
 describe('login', () => {
   it('can login user', async () => {
-    const client = new TestClient(graphql_endpoint);
+    const user: RegisterInput = {
+      email: faker.internet.email(),
+      password: faker.internet.password(),
+      firstName: faker.name.firstName(),
+      lastName: faker.name.lastName(),
+    };
 
-    const email = faker.internet.email();
-    const password = faker.internet.password();
+    await gqlCall({
+      source: registerMutation,
+      variableValues: { data: user },
+    });
 
-    await client.register(email, password, 'first', 'last');
-    await client.confirmUserByEmail(email);
+    await User.update({ email: user.email }, { confirmed: true });
 
-    const result = await client.login(email, password);
+    const loginData: LoginInput = {
+      email: user.email,
+      password: user.password,
+    };
 
-    expect(result.data).toEqual({ login: null });
+    const result = await gqlCall({
+      source: loginMutation,
+      variableValues: { data: loginData },
+    });
+
+    const { email, firstName, lastName } = user;
+
+    expect(result).toMatchObject({
+      data: {
+        login: {
+          email,
+          firstName,
+          lastName,
+        },
+      },
+    });
   });
 
   it('can returns error for bad creds', async () => {
-    const client = new TestClient(graphql_endpoint);
-    const email = faker.internet.email();
-    const password = faker.internet.password();
-
-    await client.register(email, password, 'first', 'last');
-    await client.confirmUserByEmail(email);
-
-    const result = await client.login(email, 'bad_password');
-
-    let expected = {
-      login: [
-        {
-          message: 'Invalid credentials',
-          path: 'email',
-        },
-      ],
+    const user: RegisterInput = {
+      email: faker.internet.email(),
+      password: faker.internet.password(),
+      firstName: faker.name.firstName(),
+      lastName: faker.name.lastName(),
     };
 
-    expect(result.data).toEqual(expected);
+    await gqlCall({
+      source: registerMutation,
+      variableValues: { data: user },
+    });
 
-    const result2 = await client.login('bad_email@bad.com', password);
+    await User.update({ email: user.email }, { confirmed: true });
 
-    expected = {
-      login: [
-        {
-          message: 'Invalid credentials',
-          path: 'email',
-        },
-      ],
+    const loginData: LoginInput = {
+      email: 'bad_email@email.com',
+      password: user.password,
     };
 
-    expect(result2.data).toEqual(expected);
-  });
+    const result = await gqlCall({
+      source: loginMutation,
+      variableValues: { data: loginData },
+    });
 
-  it('handles unconfirmed email', async () => {
-    const client = new TestClient(graphql_endpoint);
+    expect(result!.errors![0]).toBeDefined();
 
-    const email = faker.internet.email();
-    const password = faker.internet.password();
-
-    await client.register(email, password, 'first', 'last');
-
-    const result = await client.login(email, password);
-
-    const expected = {
-      login: [
-        {
-          message: 'Please confirm your email address (see email sent)',
-          path: 'email',
-        },
-      ],
+    const loginData_2: LoginInput = {
+      email: user.email,
+      password: 'bad password',
     };
 
-    expect(result.data).toEqual(expected);
+    const result_2 = await gqlCall({
+      source: loginMutation,
+      variableValues: { data: loginData_2 },
+    });
+
+    expect(result_2!.errors![0]).toBeDefined();
   });
 });

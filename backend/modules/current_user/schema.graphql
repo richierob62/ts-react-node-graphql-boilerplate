@@ -1,9 +1,0 @@
-# import User from '../others/schema.graphql'
-
-type Mutation {
-  dummy3: String
-}
-
-type Query {
-  currentUser: User
-}

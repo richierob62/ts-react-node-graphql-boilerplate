@@ -1,9 +1,0 @@
-# import Error from '../shared/schema.graphql'
-
-type Mutation {
-  login(password: String!, email: String!): [Error!]
-}
-
-type Query {
-  dummy2: String!
-}

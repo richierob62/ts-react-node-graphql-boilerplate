@@ -1,43 +1,85 @@
-import { Connection } from 'typeorm';
-import { TestClient } from '../../utils/tests/TestClient';
-import createTypeormConnection from '../../utils/server/create_typeorm_connection';
-import faker from 'faker';
+import {
+  currentUserQuery,
+  loginMutation,
+  registerMutation,
+} from '../../graphql/queries';
 
-const graphql_endpoint = 'http://localhost:3001/graphql';
+import { Connection } from 'typeorm';
+import { LoginInput } from '../login/login_input';
+import { RegisterInput } from '../register/RegisterInput';
+import { User } from '../../entity/User';
+import faker from 'faker';
+import gqlCall from '../../utils/tests/gql_call';
+import { testConn } from '../../utils/tests/testConn';
 
 let conn: Connection;
 
-beforeAll(async () => {
-  conn = await createTypeormConnection();
+beforeEach(async () => {
+  conn = await testConn(true);
 });
 
-afterAll(async () => {
+afterEach(async () => {
   await conn.close();
 });
 
 describe('current user', () => {
   it('returns null if no cookie', async () => {
-    const client = new TestClient(graphql_endpoint);
-
-    const result = await client.currentUser();
-
-    expect(result.data.currentUser).toEqual(null);
+    const user: RegisterInput = {
+      email: faker.internet.email(),
+      password: faker.internet.password(),
+      firstName: faker.name.firstName(),
+      lastName: faker.name.lastName(),
+    };
+    await gqlCall({
+      source: registerMutation,
+      variableValues: { data: user },
+    });
+    await User.update({ email: user.email }, { confirmed: true });
+    const result = await gqlCall({
+      source: currentUserQuery,
+    });
+    expect(result!.data!.currentUser).toEqual(null);
   });
 
   it('returns current user', async () => {
-    const client = new TestClient(graphql_endpoint);
+    const user: RegisterInput = {
+      email: faker.internet.email(),
+      password: faker.internet.password(),
+      firstName: faker.name.firstName(),
+      lastName: faker.name.lastName(),
+    };
 
-    const email = faker.internet.email();
-    const password = faker.internet.password();
+    await gqlCall({
+      source: registerMutation,
+      variableValues: { data: user },
+    });
 
-    await client.register(email, password, 'first', 'last');
-    await client.confirmUserByEmail(email);
+    await User.update({ email: user.email }, { confirmed: true });
 
-    await client.login(email, password);
-    const result = await client.currentUser();
+    const loginData: LoginInput = {
+      email: user.email,
+      password: user.password,
+    };
 
-    const expected = { email, id: 1 };
+    await gqlCall({
+      source: loginMutation,
+      variableValues: { loginData },
+    });
 
-    expect(result.data.currentUser).toEqual(expected);
+    const current = await gqlCall({
+      source: currentUserQuery,
+      userId: 1,
+    });
+
+    expect(current).toMatchObject({
+      data: {
+        currentUser: {
+          id: '1',
+          email: user.email,
+          firstName: user.firstName,
+          lastName: user.lastName,
+        },
+      },
+    });
   });
 });

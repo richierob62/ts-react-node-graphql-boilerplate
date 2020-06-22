@@ -1,63 +1,61 @@
-import { Connection } from 'typeorm';
-import { TestClient } from '../../utils/tests/TestClient';
-import createTypeormConnection from '../../utils/server/create_typeorm_connection';
-import faker from 'faker';
+import {
+  loginMutation,
+  logoutMutation,
+  registerMutation,
+} from '../../graphql/queries';
 
-const graphql_endpoint = 'http://localhost:3001/graphql';
+import { Connection } from 'typeorm';
+import { LoginInput } from '../login/login_input';
+import { RegisterInput } from '../register/RegisterInput';
+import { User } from '../../entity/User';
+import faker from 'faker';
+import gqlCall from '../../utils/tests/gql_call';
+import { testConn } from '../../utils/tests/testConn';
 
 let conn: Connection;
 
-beforeAll(async () => {
-  conn = await createTypeormConnection();
+beforeEach(async () => {
+  conn = await testConn(true);
 });
 
-afterAll(async () => {
+afterEach(async () => {
   await conn.close();
 });
 
 describe('logout', () => {
-  it('logs user out of multiple sessions', async () => {
-    const client1 = new TestClient(graphql_endpoint);
-    const client2 = new TestClient(graphql_endpoint);
+  it('logs out user', async () => {
+    const user: RegisterInput = {
+      email: faker.internet.email(),
+      password: faker.internet.password(),
+      firstName: faker.name.firstName(),
+      lastName: faker.name.lastName(),
+    };
 
-    const email = faker.internet.email();
-    const password = faker.internet.password();
+    await gqlCall({
+      source: registerMutation,
+      variableValues: { data: user },
+    });
 
-    await client1.register(email, password, 'first', 'last');
-    await client1.confirmUserByEmail(email);
+    await User.update({ email: user.email }, { confirmed: true });
 
-    await client1.login(email, password);
-    await client2.login(email, password);
+    const loginData: LoginInput = {
+      email: user.email,
+      password: user.password,
+    };
 
-    let firstSession = await client1.currentUser();
-    let secondSession = await client2.currentUser();
+    await gqlCall({
+      source: loginMutation,
+      variableValues: { data: loginData },
+    });
 
-    expect(firstSession).toEqual(secondSession);
+    await gqlCall({
+      source: loginMutation,
+      variableValues: { data: loginData },
+    });
 
-    await client1.logout();
-    firstSession = await client1.currentUser();
-    secondSession = await client2.currentUser();
-
-    expect(firstSession).toEqual(secondSession);
-  });
-
-  it('logs out current user from single session', async () => {
-    const client = new TestClient(graphql_endpoint);
-
-    const email = faker.internet.email();
-    const password = faker.internet.password();
-
-    await client.register(email, password, 'first', 'last');
-    await client.confirmUserByEmail(email);
-
-    const result = await client.login(email, password);
-
-    expect(result.data).toEqual({ login: null });
-
-    const result2 = await client.logout();
-    expect(result2.data.logout).toEqual(true);
-
-    const result3 = await client.currentUser();
-    expect(result3.data.currentUser).toBeNull();
+    await gqlCall({
+      source: logoutMutation,
+      userId: 1,
+    });
   });
 });

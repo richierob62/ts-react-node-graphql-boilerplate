@@ -1,34 +1,43 @@
-import { RegisterInput } from '../../modules/register/register_input';
-import fetch from 'node-fetch';
+import { LoginInput } from '../../modules/login/login_input';
+import { RegisterInput } from '../../modules/register/RegisterInput';
+import { User } from '../../entity/User';
+import axios from 'axios';
 
 export class TestClient {
-  // async login(email: string, password: string) {
-  //   return rp.post(this.url, {
-  //     ...this.options,
-  //     body: {
-  //       query: `mutation {
-  //         login(password: "${password}", email: "${email}") {
-  //           path
-  //           message
-  //         }
-  //       }`,
-  //     },
-  //   });
-  // }
+  async login(data: LoginInput) {
+    const transport = axios.create({
+      withCredentials: true,
+    });
 
-  // async currentUser() {
-  //   return rp.post(this.url, {
-  //     ...this.options,
-  //     body: {
-  //       query: `{
-  //         currentUser{
-  //           id
-  //           email
-  //         }
-  //       }`,
-  //     },
-  //   });
-  // }
+    const result = await transport.post(process.env.GRAPHQL_URI as string, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        query: loginMutation,
+        variables: { data },
+      }),
+    });
+
+    return result;
+  }
+
+  async currentUser() {
+    const transport = axios.create({
+      withCredentials: true,
+    });
+
+    const result = await transport.post(process.env.GRAPHQL_URI as string, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        query: currentUserQuery,
+      }),
+    });
+
+    return result;
+  }
 
   // async logout() {
   //   return rp.post(this.url, {
@@ -55,21 +64,35 @@ export class TestClient {
   //   });
   // }
 
-  // async confirmUserByEmail(email: string) {
-  //   await User.update({ email }, { confirmed: true });
-  // }
+  async confirmEmail(token: string) {
+    const confirmEmailMutation = `
+    mutation ($token: string!) {
+      confirmEmail(token: $token)
+    }
+  `;
+
+    const transport = axios.create({
+      withCredentials: true,
+    });
+
+    const result = await transport.post(process.env.GRAPHQL_URI as string, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        query: confirmEmailMutation,
+        variables: { token },
+      }),
+    });
+
+    return result;
+  }
 
   async register(data: RegisterInput) {
-    const registerMutation = `
-      mutation register($data: RegisterInput!) {
-        register(data: $data) {
-          id
-          email
-        }
-      }
-    `;
+    const transport = axios.create({
+      withCredentials: true,
+    });
 
-    const result = await fetch(process.env.GRAPHQL_URI as string, {
+    const result = await transport.post(process.env.GRAPHQL_URI as string, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -78,6 +101,6 @@ export class TestClient {
       }),
     });
 
-    return await result.json();
+    return result;
   }
 }

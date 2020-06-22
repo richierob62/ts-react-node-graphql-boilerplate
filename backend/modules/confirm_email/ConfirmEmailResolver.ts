@@ -1,11 +1,11 @@
 import { Mutation, Resolver, Ctx, Arg } from 'type-graphql';
 import { Context } from '../../utils/server/resolver_types';
-import { User } from '../../entity/User';
 import { AuthenticationError } from 'apollo-server-express';
+import { User } from '../../entity/User';
 
 @Resolver()
 export class ConfirmEmailResolver {
-  @Mutation(() => Boolean, { nullable: true })
+  @Mutation(() => Boolean)
   async confirmEmail(
     @Arg('token') token: string,
     @Ctx() ctx: Context

@@ -3,7 +3,6 @@ import bcrypt from 'bcrypt';
 import { LoginInput } from './login_input';
 import { Mutation, Resolver, Arg, Ctx } from 'type-graphql';
 import { Context } from '../../utils/server/resolver_types';
-import { AuthenticationError } from 'apollo-server-express';
 
 @Resolver()
 export class LoginResolver {
@@ -14,26 +13,23 @@ export class LoginResolver {
   ): Promise<User | undefined> {
     const user = await User.findOne({ where: { email: data.email } });
 
-    if (!user) throw new AuthenticationError('Invalid credentials');
+    if (!user) throw new Error('Invalid credentials');
 
     if (!user.confirmed)
-      throw new AuthenticationError(
-        'Please confirm your email address (see email sent'
-      );
+      throw new Error('Please confirm your email address (see email sent)');
 
-    if (user.account_locked)
-      throw new AuthenticationError('Your account has been locked');
+    if (user.account_locked) throw new Error('Your account has been locked');
 
     if (!user.password) {
       // user logged in using oauth
-      throw new AuthenticationError(
+      throw new Error(
         'Invalid credentials.  Try again or use social media login'
       );
     }
 
     const validPassword = await bcrypt.compare(data.password, user.password);
 
-    if (!validPassword) throw new AuthenticationError('Invalid credentials');
+    if (!validPassword) throw new Error('Invalid credentials');
 
     const { req, redis } = ctx;
 

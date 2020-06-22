@@ -1,6 +1,6 @@
 import { Mutation, Resolver, Arg, Ctx } from 'type-graphql';
 import { User } from '../../entity/User';
-import { RegisterInput } from './register_input';
+import { RegisterInput } from './RegisterInput';
 import { sendEmail, EmailData } from '../../utils/mail/send_email';
 import { createConfirmEmailLink } from '../../utils/auth/create_confirm_email_link';
 import { Context } from '../../utils/server/resolver_types';

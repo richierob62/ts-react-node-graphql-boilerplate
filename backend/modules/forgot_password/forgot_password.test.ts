@@ -1,99 +1,73 @@
+import {
+  forgotPasswordMutation,
+  loginMutation,
+  registerMutation,
+} from '../../graphql/queries';
+
 import { Connection } from 'typeorm';
-import { TestClient } from '../../utils/tests/TestClient';
+import { LoginInput } from '../login/login_input';
+import { RegisterInput } from '../register/RegisterInput';
 import { User } from '../../entity/User';
-import { createForgotPasswordEmailLink } from '../../utils/auth/create_forgot_password_email_link';
-import createTypeormConnection from '../../utils/server/create_typeorm_connection';
 import faker from 'faker';
-import { lockAccountOnForgotPassword } from '../../utils/auth/lock_account_on_forgot_password';
-
-import Redis = require('ioredis');
-const redis = new Redis();
-
-const graphql_endpoint = 'http://localhost:3001/graphql';
+import gqlCall from '../../utils/tests/gql_call';
+import { testConn } from '../../utils/tests/testConn';
 
 let conn: Connection;
 
 beforeEach(async () => {
-  conn = await createTypeormConnection();
+  conn = await testConn(true);
 });
 
 afterEach(async () => {
   await conn.close();
 });
 
-describe('forgot_password', () => {
-  it('can change password with key from email', async () => {
-    const client = new TestClient(graphql_endpoint);
+describe('forgot password', () => {
+  it('rejects a bad password', async () => {
+    const data: RegisterInput = {
+      email: faker.internet.email(),
+      password: faker.internet.password(),
+      firstName: faker.name.firstName(),
+      lastName: faker.name.lastName(),
+    };
 
-    const email = faker.internet.email();
-    const password = faker.internet.password();
+    const result = await gqlCall({
+      source: registerMutation,
+      variableValues: { data },
+    });
 
-    await client.register(email, password, 'first', 'last');
-    await client.confirmUserByEmail(email);
+    const id = result!.data!.register!.id;
 
-    const user = (await User.findOne({ email })) as User;
+    await User.update({ id }, { confirmed: true });
 
-    await lockAccountOnForgotPassword(user.id, redis);
+    const locked = await gqlCall({
+      source: forgotPasswordMutation,
+      variableValues: { data: { email: data.email } },
+    });
 
-    const resultLogin = await client.login(email, password);
-
-    expect(resultLogin).toEqual({
+    expect(locked).toMatchObject({
       data: {
-        login: [
-          {
-            path: 'email',
-            message: 'Your account has been locked',
-          },
-        ],
+        forgotPassword: true,
       },
     });
 
-    const url = await createForgotPasswordEmailLink(
-      'something',
-      user.id,
-      redis
-    );
-
-    const chunks = url.split('/');
-    const key = chunks[chunks.length - 1];
-
-    const resultBadPassword = await client.resetPassword('a', key);
-
-    expect(resultBadPassword).toEqual({
-      data: {
-        resetPassword: [
-          {
-            path: 'password',
-            message: 'password must be at least 3 characters',
-          },
-        ],
-      },
+    const user = await User.findOne({
+      where: { account_locked: true, email: data.email },
     });
 
-    const newPassword = 'new_pass';
+    expect(user).toBeDefined();
 
-    const resultPasswordChange = await client.resetPassword(newPassword, key);
+    const loginData: LoginInput = {
+      email: user!.email!,
+      password: user!.password!,
+    };
 
-    expect(resultPasswordChange.data.resetPassword).toBeNull();
-
-    const resultMultipleAttempts = await client.resetPassword(
-      'somethingNew',
-      key
-    );
-
-    expect(resultMultipleAttempts).toEqual({
-      data: {
-        resetPassword: [
-          {
-            path: 'reset_password',
-            message: 'password link has expired',
-          },
-        ],
-      },
+    const loginResult = await gqlCall({
+      source: loginMutation,
+      variableValues: { data: loginData },
     });
 
-    // const result2 = await client.login(email, newPassword);
-
-    // expect(result2.data.login).toBeNull();
+    expect(loginResult.errors).toBeDefined();
+    expect(loginResult.data!.login).toBeFalsy();
   });
 });

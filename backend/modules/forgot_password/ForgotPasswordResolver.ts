@@ -1,69 +1,33 @@
-import { ResolverMap } from '../../utils/server/resolver_types';
+import { Mutation, Resolver, Arg, Ctx } from 'type-graphql';
 import { User } from '../../entity/User';
+// import { sendEmail, EmailData } from '../../utils/mail/send_email';
+// import { createConfirmEmailLink } from '../../utils/auth/create_confirm_email_link';
+import { Context } from '../../utils/server/resolver_types';
+import { removeUserSessions } from '../../utils/auth/remove_users_sessions';
 import { createForgotPasswordEmailLink } from '../../utils/auth/create_forgot_password_email_link';
-// import { lockAccountOnForgotPassword } from '../../utils/auth/lock_account_on_forgot_password';
+import { EmailInput } from '../register/EmailInput';
 
-export const resolvers: ResolverMap = {
-  Query: {
-    dummy5: () => 'ignore',
-  },
-  Mutation: {
-    sendForgotPasswordEmail: async (_, { email }, { redis }) => {
-      const user = await User.findOne({ where: { email } });
-      if (!user)
-        return [
-          {
-            path: 'reset_password',
-            message: 'Email not found',
-          },
-        ];
+@Resolver()
+export class ForgotPasswordResolver {
+  @Mutation(() => Boolean)
+  async forgotPassword(
+    @Arg('data') data: EmailInput,
+    @Ctx() ctx: Context
+  ): Promise<boolean> {
+    const user = await User.findOne({ where: { email: data.email } });
+    if (!user) return false;
 
-      // await lockAccountOnForgotPassword(user.id, redis);
+    await User.update({ id: user.id }, { account_locked: true });
+    await removeUserSessions(user.id, ctx.redis, ctx.res);
 
-      const url = await createForgotPasswordEmailLink(
-        process.env.FRONT_END_DOMAIN as string,
-        user.id,
-        redis
-      );
-      // @todo: send email here
+    await createForgotPasswordEmailLink(
+      process.env.FRONT_END_DOMAIN as string,
+      user.id,
+      ctx.redis
+    );
 
-      console.log(url);
+    // TODO: send email
 
-      return null;
-    },
-    resetPassword: async (_, { newPassword, key }, { redis }) => {
-      const userId = await redis.get(`p_reset:${key}`);
-
-      if (!userId)
-        return [
-          {
-            path: 'reset_password',
-            message: 'password link has expired',
-          },
-        ];
-
-      // try {
-      //   await passwordValidation.validate(
-      //     { password: newPassword },
-      //     {
-      //       abortEarly: false,
-      //     }
-      //   );
-      // } catch (e) {
-      //   return formatYupError(e);
-      // }
-
-      await User.update(
-        { id: parseInt(userId) },
-        { account_locked: false, password: newPassword }
-      );
-
-      await redis.del(`p_reset:${key}`);
-
-      return null;
-    },
-  },
-};
-
-// QueryBuilder
-// https://typeorm.io/#/select-query-builder
+    return true;
+  }
+}

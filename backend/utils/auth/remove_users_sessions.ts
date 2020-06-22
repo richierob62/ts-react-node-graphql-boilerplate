@@ -6,15 +6,6 @@ export const removeUserSessions = async (
   redis: Redis,
   res: Response
 ) => {
-  const sessionIds = await redis.lrange(`user_sid:${userId}`, 0, -1);
-
-  const promises = [];
-
-  for (let i = 0; i < sessionIds.length; i++) {
-    promises.push(redis.del(`sess:${sessionIds[i]}`));
-  }
-
+  await redis.del([`user_sid:${userId}`]);
   res.clearCookie(process.env.SESSION_NAME!);
-
-  await Promise.all(promises);
 };

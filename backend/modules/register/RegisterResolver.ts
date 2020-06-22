@@ -1,6 +1,6 @@
 import { Mutation, Resolver, Arg, Ctx } from 'type-graphql';
 import { User } from '../../entity/User';
-import { RegisterInput } from './register_input';
+import { RegisterInput } from './RegisterInput';
 import { sendEmail, EmailData } from '../../utils/mail/send_email';
 import { createConfirmEmailLink } from '../../utils/auth/create_confirm_email_link';
 import { Context } from '../../utils/server/resolver_types';
@@ -11,12 +11,13 @@ export class RegisterResolver {
   async register(
     @Arg('data') data: RegisterInput,
     @Ctx() ctx: Context
-  ): Promise<User> {
+  ): Promise<Partial<User>> {
     const user = User.create(data);
+
     await user.save();
 
-    // TODO remove this check
-    if (!process.env.SKIP_EMAIL === true) {
+    // TODO remove this check - added to restrict during testing
+    if (data.email === 'send@example.com') {
       const link = await createConfirmEmailLink(
         ctx.confirmUrl,
         user.id,
@@ -33,7 +34,11 @@ export class RegisterResolver {
 
       await sendEmail(mailData);
     }
-
-    return user;
+    return {
+      id: user.id,
+      email: user.email,
+      firstName: user.firstName,
+      lastName: user.lastName,
+    };
   }
 }
