@@ -21,9 +21,5 @@
     "esModuleInterop": true
   },
   "exclude": ["node_modules"],
-  "include": [
-    "backend/**/*.tsx",
-    "backend/**/*.ts",
-    "backend/modules/current_user"
-  ]
+  "include": ["backend/**/*.tsx", "backend/**/*.ts"]
 }
