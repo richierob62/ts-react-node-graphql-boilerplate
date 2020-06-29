@@ -1,6 +1,6 @@
 import { GraphQLSchema, graphql } from 'graphql';
 
-import Maybe from 'graphql/tsutils/Maybe';
+import { Maybe } from 'graphql/jsutils/Maybe';
 import createSchema from '../server/create_schema';
 import redis from '../redis/redis';
 

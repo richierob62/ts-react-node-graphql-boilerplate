@@ -49,6 +49,18 @@ export class User extends BaseEntity {
   @Column({ type: 'varchar', length: '255', nullable: true })
   twitter_id: string | null;
 
+  @Field(() => String, { nullable: true })
+  @Column({ type: 'varchar', length: '255', nullable: true })
+  facebook_id: string | null;
+
+  @Field(() => String, { nullable: true })
+  @Column({ type: 'varchar', length: '255', nullable: true })
+  google_id: string | null;
+
+  @Field(() => String, { nullable: true })
+  @Column({ type: 'varchar', length: '255', nullable: true })
+  instagram_id: string | null;
+
   // Calculated fields
   @Field()
   fullName(@Root() parent: User): string {
@@ -68,7 +80,9 @@ export class User extends BaseEntity {
   // Actions
   @BeforeUpdate()
   async hashPasswordBeforeUpdate() {
-    this.password = await bcrypt.hash(this.password, 12);
+    if (this.password) {
+      this.password = await bcrypt.hash(this.password, 12);
+    }
   }
 
   @BeforeInsert()

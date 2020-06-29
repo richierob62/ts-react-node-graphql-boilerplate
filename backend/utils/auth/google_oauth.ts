@@ -1,26 +1,26 @@
 import { Connection } from 'typeorm';
-import { Strategy } from 'passport-twitter';
+import GoogleStrategy from 'passport-google-oauth';
 import { User } from '../../entity/User';
+
+const Strategy = GoogleStrategy.OAuth2Strategy;
 
 const strategy = (connection: Connection) =>
   new Strategy(
     {
-      consumerKey: process.env.TWITTER_CONSUMER_KEY as string,
-      consumerSecret: process.env.TWITTER_CONSUMER_SECRET as string,
-      callbackURL: 'http://localhost:3001/auth/twitter/callback',
-      includeEmail: true,
+      clientID: process.env.GOOGLE_CLIENT_ID as string,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
+      callbackURL: 'http://localhost:3001/auth/google/callback',
     },
     async (_, __, profile, cb) => {
-      const { id, emails, displayName } = profile;
+      const { id, emails, name } = profile;
       const email = emails ? emails[0].value : null;
-      const [firstName, lastName] = displayName
-        ? displayName.split(' ')
-        : [null, null];
+      const firstName = name ? name.givenName : null;
+      const lastName = name ? name.familyName : null;
 
       const query = connection
         .getRepository(User)
         .createQueryBuilder('user')
-        .where('user.twitter_id = :id', { id });
+        .where('user.google_id = :id', { id });
 
       if (email) {
         query.orWhere('user.email = :email', { email });
@@ -30,14 +30,14 @@ const strategy = (connection: Connection) =>
 
       if (!user) {
         user = await User.create({
-          twitter_id: id,
+          google_id: id,
           email,
           firstName,
           lastName,
           confirmed: true,
         }).save();
       } else {
-        user.twitter_id = id;
+        user.google_id = id;
         user.firstName = firstName;
         user.lastName = lastName;
         user.email = email;

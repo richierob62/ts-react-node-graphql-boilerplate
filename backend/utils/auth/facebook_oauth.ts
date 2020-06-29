@@ -1,26 +1,25 @@
 import { Connection } from 'typeorm';
-import { Strategy } from 'passport-twitter';
+import { Strategy } from 'passport-facebook';
 import { User } from '../../entity/User';
 
 const strategy = (connection: Connection) =>
   new Strategy(
     {
-      consumerKey: process.env.TWITTER_CONSUMER_KEY as string,
-      consumerSecret: process.env.TWITTER_CONSUMER_SECRET as string,
-      callbackURL: 'http://localhost:3001/auth/twitter/callback',
-      includeEmail: true,
+      clientID: process.env.FACEBOOK_APP_ID as string,
+      clientSecret: process.env.FACEBOOK_APP_SECRET as string,
+      callbackURL: 'http://localhost:3001/auth/facebook/callback',
+      profileFields: ['email', 'name'],
     },
     async (_, __, profile, cb) => {
-      const { id, emails, displayName } = profile;
+      const { id, emails, name } = profile;
       const email = emails ? emails[0].value : null;
-      const [firstName, lastName] = displayName
-        ? displayName.split(' ')
-        : [null, null];
+      const firstName = name ? name.givenName : null;
+      const lastName = name ? name.familyName : null;
 
       const query = connection
         .getRepository(User)
         .createQueryBuilder('user')
-        .where('user.twitter_id = :id', { id });
+        .where('user.facebook_id = :id', { id });
 
       if (email) {
         query.orWhere('user.email = :email', { email });
@@ -30,14 +29,14 @@ const strategy = (connection: Connection) =>
 
       if (!user) {
         user = await User.create({
-          twitter_id: id,
+          facebook_id: id,
           email,
           firstName,
           lastName,
           confirmed: true,
         }).save();
       } else {
-        user.twitter_id = id;
+        user.facebook_id = id;
         user.firstName = firstName;
         user.lastName = lastName;
         user.email = email;
