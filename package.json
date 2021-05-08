@@ -79,7 +79,7 @@
     "rate-limit-redis": "^1.7.0",
     "reflect-metadata": "^0.1.10",
     "type-graphql": "^1.0.0-rc.2",
-    "typeorm": "0.2.24",
+    "typeorm": "0.2.25",
     "uuid": "^7.0.3",
     "yup": "^0.28.5"
   }
